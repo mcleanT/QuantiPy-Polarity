@@ -63,9 +63,7 @@ def segment_fov(
         raise ImportError(_CELLPOSE_IMPORT_HINT) from exc
 
     if image.ndim not in (2, 3):
-        raise ValueError(
-            f"segment_fov expects 2D or 3D image, got shape {image.shape}"
-        )
+        raise ValueError(f"segment_fov expects 2D or 3D image, got shape {image.shape}")
 
     cp_model = models.CellposeModel(gpu=gpu, pretrained_model=model)
     masks, flows, styles = cp_model.eval(
@@ -88,6 +86,7 @@ def segment_fov(
         if not np.array_equal(unique_ids, expected):
             # Re-label to ensure contiguous IDs (skimage relabel)
             from skimage.segmentation import relabel_sequential
+
             masks, _, _ = relabel_sequential(masks)
             masks = masks.astype(np.uint16)
             n_after = int(masks.max())

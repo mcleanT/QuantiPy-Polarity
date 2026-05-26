@@ -4,7 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from quantipy_polarity.io._common import fov_id_from_path, pair_masks_with_membranes, pair_tifs_by_channel
+from quantipy_polarity.io._common import (
+    fov_id_from_path,
+    pair_masks_with_membranes,
+    pair_tifs_by_channel,
+)
 
 
 @pytest.mark.parametrize(
@@ -62,6 +66,7 @@ def test_pair_raises_on_empty_dir(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # pair_tifs_by_channel tests
 # ---------------------------------------------------------------------------
+
 
 def test_pair_tifs_by_channel_no_seg(tmp_path: Path) -> None:
     """Pairs membrane-only files; seg_path is None when channel_segmentation is None."""

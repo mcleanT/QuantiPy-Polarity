@@ -30,10 +30,10 @@ class TIFFOV:
     """One FOV loaded from TIF: membrane channel + optional nuclear channel."""
 
     fov_id: str
-    membrane: np.ndarray     # (H, W) float32, [0, 1]
+    membrane: np.ndarray  # (H, W) float32, [0, 1]
     nuclear: np.ndarray | None  # (H, W) float32, [0, 1] or None
     pixel_size_um: float
-    raw_dtype: np.dtype      # original dtype before normalization
+    raw_dtype: np.dtype  # original dtype before normalization
 
     def __post_init__(self) -> None:
         if self.membrane.ndim != 2:
@@ -150,9 +150,7 @@ def load_tif_fov_multifile(
     if nuclear_path is not None:
         nuclear_raw = tifffile.imread(nuclear_path)
         if nuclear_raw.ndim != 2:
-            raise ValueError(
-                f"{fov_id}: nuclear TIF must be 2D for multifile scheme"
-            )
+            raise ValueError(f"{fov_id}: nuclear TIF must be 2D for multifile scheme")
     return TIFFOV(
         fov_id=fov_id,
         membrane=_normalize_channel(membrane_raw),
@@ -203,4 +201,6 @@ def iter_tif_dataset(
             log.debug("loading_tif_multifile", fov_id=fov_id, membrane=str(mem_path))
             yield load_tif_fov_multifile(mem_path, nuc_path, fov_id, pixel_size_um)
     else:
-        raise ValueError(f"Unknown TIF scheme: {scheme!r}. Expected 'stack' or 'multifile'.")
+        raise ValueError(
+            f"Unknown TIF scheme: {scheme!r}. Expected 'stack' or 'multifile'."
+        )

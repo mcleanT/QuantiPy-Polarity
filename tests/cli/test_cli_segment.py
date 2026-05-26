@@ -3,6 +3,7 @@
 Fast-tier tests: reject masks-mode input; help text presence; config parsing.
 Nightly-gated tests: real TIF → Cellpose → on-disk masks roundtrip.
 """
+
 from __future__ import annotations
 
 import tempfile
@@ -21,15 +22,16 @@ from tests.fixtures._build import write_synthetic_tif_stack
 # Fast-tier tests (no cellpose invocation)
 # ---------------------------------------------------------------------------
 
+
 def _write_masks_config(tmp_path: Path) -> Path:
     cfg_text = f"""
 project:
   name: test
-  output_dir: {tmp_path / 'results'}
+  output_dir: {tmp_path / "results"}
 input:
   mode: masks
-  path: {tmp_path / 'masks'}
-  masks_dir: {tmp_path / 'masks_dir'}
+  path: {tmp_path / "masks"}
+  masks_dir: {tmp_path / "masks_dir"}
   pixel_size_um: 0.65
 """
     p = tmp_path / "config.yaml"
@@ -41,7 +43,7 @@ def _write_tif_config(tmp_path: Path, input_path: Path) -> Path:
     cfg_text = f"""
 project:
   name: test
-  output_dir: {tmp_path / 'results'}
+  output_dir: {tmp_path / "results"}
 input:
   mode: tif
   path: {input_path}
@@ -81,7 +83,9 @@ def test_segment_cmd_config_missing_file() -> None:
 # Nightly-gated test: full TIF → Cellpose → on-disk masks
 # ---------------------------------------------------------------------------
 
-cellpose = pytest.importorskip("cellpose", reason="cellpose not installed; nightly-tier test only")
+cellpose = pytest.importorskip(
+    "cellpose", reason="cellpose not installed; nightly-tier test only"
+)
 
 
 def test_segment_cmd_tif_to_masks_e2e(tmp_path: Path) -> None:
@@ -116,5 +120,6 @@ def test_segment_cmd_tif_to_masks_e2e(tmp_path: Path) -> None:
     status_path = seg_dir / "_stage_status.json"
     assert status_path.exists()
     import json
+
     status = json.loads(status_path.read_text())
     assert status["status"] == "complete"

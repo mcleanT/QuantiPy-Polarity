@@ -1,4 +1,5 @@
 """Tests for io/tif.py — TIF ingest with stack and multifile schemes."""
+
 from __future__ import annotations
 
 import tempfile
@@ -16,12 +17,16 @@ from quantipy_polarity.io.tif import (
     load_tif_fov_multifile,
     load_tif_fov_stack,
 )
-from tests.fixtures._build import write_synthetic_tif_stack, write_synthetic_tif_multifile
+from tests.fixtures._build import (
+    write_synthetic_tif_stack,
+    write_synthetic_tif_multifile,
+)
 
 
 # ---------------------------------------------------------------------------
 # _normalize_channel
 # ---------------------------------------------------------------------------
+
 
 def test_normalize_uint16_max() -> None:
     arr = np.array([[65535]], dtype=np.uint16)
@@ -47,11 +52,14 @@ def test_normalize_float32_passthrough() -> None:
 # _extract_channels_stack
 # ---------------------------------------------------------------------------
 
+
 def test_extract_channels_stack_chw() -> None:
     """(C, H, W) layout: first axis is channels."""
     arr = np.zeros((3, 64, 64), dtype=np.uint16)
     arr[1] = 1000  # channel 1 = membrane
-    mem, nuc = _extract_channels_stack(arr, channel_membrane=1, channel_segmentation=0, fov_id="T")
+    mem, nuc = _extract_channels_stack(
+        arr, channel_membrane=1, channel_segmentation=0, fov_id="T"
+    )
     assert mem.shape == (64, 64)
     assert mem[0, 0] == 1000
     assert nuc is not None and nuc.shape == (64, 64)
@@ -61,7 +69,9 @@ def test_extract_channels_stack_hwc() -> None:
     """(H, W, C) layout: last axis is channels when first axis > 8."""
     arr = np.zeros((64, 64, 3), dtype=np.uint16)
     arr[..., 2] = 2000  # channel 2 = membrane
-    mem, nuc = _extract_channels_stack(arr, channel_membrane=2, channel_segmentation=None, fov_id="T")
+    mem, nuc = _extract_channels_stack(
+        arr, channel_membrane=2, channel_segmentation=None, fov_id="T"
+    )
     assert mem.shape == (64, 64)
     assert mem[0, 0] == 2000
     assert nuc is None
@@ -76,6 +86,7 @@ def test_extract_channels_stack_out_of_range() -> None:
 # ---------------------------------------------------------------------------
 # load_tif_fov_stack
 # ---------------------------------------------------------------------------
+
 
 def test_load_tif_fov_stack_roundtrip(tmp_path: Path) -> None:
     data = write_synthetic_tif_stack(tmp_path, "FOV_01", n_cells=10, image_size=64)
@@ -112,6 +123,7 @@ def test_load_tif_fov_stack_no_nuclear(tmp_path: Path) -> None:
 # load_tif_fov_multifile
 # ---------------------------------------------------------------------------
 
+
 def test_load_tif_fov_multifile_roundtrip(tmp_path: Path) -> None:
     write_synthetic_tif_multifile(tmp_path, "FOV_01", n_cells=10, image_size=64)
     fov = load_tif_fov_multifile(
@@ -128,6 +140,7 @@ def test_load_tif_fov_multifile_roundtrip(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # iter_tif_dataset — stack scheme
 # ---------------------------------------------------------------------------
+
 
 def test_iter_tif_dataset_stack(tmp_path: Path) -> None:
     for fov_name in ("FOV_01", "FOV_02", "FOV_03"):
@@ -146,6 +159,7 @@ def test_iter_tif_dataset_stack_empty_dir(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # iter_tif_dataset — multifile scheme
 # ---------------------------------------------------------------------------
+
 
 def test_iter_tif_dataset_multifile(tmp_path: Path) -> None:
     for fov_name in ("FOV_01", "FOV_02"):

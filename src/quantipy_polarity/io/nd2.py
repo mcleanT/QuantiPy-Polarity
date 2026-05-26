@@ -30,9 +30,9 @@ class ND2FOV:
     """One FOV loaded from an ND2 file."""
 
     fov_id: str
-    membrane: np.ndarray       # (H, W) float32, [0, 1]
+    membrane: np.ndarray  # (H, W) float32, [0, 1]
     nuclear: np.ndarray | None  # (H, W) float32, [0, 1] or None
-    pixel_size_um: float        # from ND2 metadata or config fallback
+    pixel_size_um: float  # from ND2 metadata or config fallback
     raw_dtype: np.dtype
 
     def __post_init__(self) -> None:
@@ -47,7 +47,9 @@ class ND2FOV:
             )
 
 
-def _z_project(stack: np.ndarray, policy: str, substack_range: tuple[int, int] | None) -> np.ndarray:
+def _z_project(
+    stack: np.ndarray, policy: str, substack_range: tuple[int, int] | None
+) -> np.ndarray:
     """Project a (Z, H, W) stack to (H, W) according to policy.
 
     Args:
@@ -70,7 +72,9 @@ def _z_project(stack: np.ndarray, policy: str, substack_range: tuple[int, int] |
                 f"substack_range=({z_min}, {z_max}) out of range for Z={stack.shape[0]}"
             )
         return stack[z_min : z_max + 1].max(axis=0)
-    raise ValueError(f"Unknown z_policy: {policy!r}. Expected 'mip', 'substack', or 'none'.")
+    raise ValueError(
+        f"Unknown z_policy: {policy!r}. Expected 'mip', 'substack', or 'none'."
+    )
 
 
 def _extract_fov_from_nd2(nd2: object, v: int) -> np.ndarray:

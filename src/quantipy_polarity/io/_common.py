@@ -94,7 +94,11 @@ def pair_tifs_by_channel(
     for mp in mem_files:
         # Derive fov_id: strip channel suffix from stem
         stem = mp.stem  # e.g. "FOV_01_ch0"
-        if not stem.endswith(membrane_suffix.lstrip("_") if membrane_suffix.startswith("_") else membrane_suffix):
+        if not stem.endswith(
+            membrane_suffix.lstrip("_")
+            if membrane_suffix.startswith("_")
+            else membrane_suffix
+        ):
             fov_id = fov_id_from_path(mp)
         else:
             fov_id = stem[: -len(membrane_suffix)]

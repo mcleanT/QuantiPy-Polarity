@@ -53,7 +53,9 @@ def _config_hash(cfg: Config) -> str:
     default=None,
     help="Output directory (overrides config project.output_dir).",
 )
-@click.option("--gpu/--no-gpu", default=False, show_default=True, help="Use GPU for Cellpose.")
+@click.option(
+    "--gpu/--no-gpu", default=False, show_default=True, help="Use GPU for Cellpose."
+)
 def segment_cmd(
     config_path: Path,
     input_path: Path | None,
@@ -98,6 +100,7 @@ def segment_cmd(
 
     chash = _config_hash(cfg)
     from quantipy_polarity.segment._writer import write_stage_status
+
     write_stage_status(out_dir, "running", config_hash=chash)
 
     try:
@@ -121,8 +124,10 @@ def _run_segment(cfg: Config, out_dir: Path, *, gpu: bool) -> None:
 
     try:
         from tqdm import tqdm as _tqdm
+
         progress = _tqdm
     except ImportError:
+
         def progress(x, **_):  # type: ignore[misc]
             return x
 
@@ -135,6 +140,7 @@ def _run_segment(cfg: Config, out_dir: Path, *, gpu: bool) -> None:
 
         # Convert normalized float32 [0,1] membrane to uint16 for Cellpose
         import numpy as np
+
         image_u16 = (fov.membrane * 65535).clip(0, 65535).astype(np.uint16)
 
         masks, meta = segment_fov(
@@ -162,16 +168,20 @@ def _build_fov_iterator(cfg: Config):
 
     if input_cfg.mode == "tif":
         from quantipy_polarity.io.tif import iter_tif_dataset
+
         return iter_tif_dataset(
             tif_dir=input_cfg.path,
             channel_membrane=input_cfg.channel_membrane,
             channel_segmentation=input_cfg.channel_segmentation,
             pixel_size_um=input_cfg.pixel_size_um,
             scheme=getattr(input_cfg, "tif_scheme", "stack"),
-            channel_suffix_template=getattr(input_cfg, "channel_suffix_template", "_ch{ch}"),
+            channel_suffix_template=getattr(
+                input_cfg, "channel_suffix_template", "_ch{ch}"
+            ),
         )
     elif input_cfg.mode == "nd2":
         from quantipy_polarity.io.nd2 import iter_nd2_dataset
+
         # nd2 mode: iterate all .nd2 files in path
         nd2_files = sorted(Path(input_cfg.path).glob("*.nd2"))
         if not nd2_files:

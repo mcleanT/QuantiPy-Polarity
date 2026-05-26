@@ -3,6 +3,7 @@
 These tests do NOT import cellpose; they verify module structure and
 the lazy-import contract (ImportError with a useful message).
 """
+
 from __future__ import annotations
 
 import inspect
@@ -14,12 +15,14 @@ def test_segment_package_imports() -> None:
     """segment/ package and cellpose_sam module import without errors."""
     import quantipy_polarity.segment  # noqa: F401
     from quantipy_polarity.segment.cellpose_sam import segment_fov
+
     assert callable(segment_fov)
 
 
 def test_segment_fov_signature() -> None:
     """segment_fov has the expected keyword-only parameters."""
     from quantipy_polarity.segment.cellpose_sam import segment_fov
+
     sig = inspect.signature(segment_fov)
     params = sig.parameters
     assert "image" in params
@@ -33,6 +36,7 @@ def test_segment_fov_signature() -> None:
 def test_segmentation_result_contract() -> None:
     """SegmentationResult Pydantic model validates a known-good dict."""
     from quantipy_polarity.contracts import SegmentationResult
+
     sr = SegmentationResult(
         fov_id="FOV_01",
         n_cells_total=85,
