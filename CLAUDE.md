@@ -17,7 +17,8 @@ microscopy images. The `quantipy` command is installed by
 | `quantipy --version` / `--help` | implemented | CLI introspection |
 | `quantipy run` | stubbed (Phase 5) | Single-shot pipeline |
 | `quantipy polarity` / `aggregate` | implemented (Phase 2) | Masks→per-cell→experiment parquet |
-| `quantipy ingest` / `segment` / `front` / `plot` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
+| `quantipy segment` | implemented (Phase 3) | TIF/ND2 → Cellpose-SAM → label masks |
+| `quantipy ingest` / `front` / `plot` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
 | `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
 | `quantipy validate` | stubbed (Phase 6) | QP-vs-Python figure regeneration |
 | `quantipy download-demo` | stubbed (Phase 6) | Pull demo bundle from Release |
@@ -31,6 +32,10 @@ microscopy images. The `quantipy` command is installed by
 - `src/quantipy_polarity/polarity/boundary_pca.py` — Fourier-k=2 PCA polarity algorithm (lifted from research repo)
 - `src/quantipy_polarity/polarity/per_cell.py` — per-FOV → experiment parquet
 - `src/quantipy_polarity/io/masks.py` — paired (mask, membrane) FOV loader
+- `src/quantipy_polarity/io/tif.py` — TIF ingest (stack + multifile schemes)
+- `src/quantipy_polarity/io/nd2.py` — ND2 ingest via nd2reader
+- `src/quantipy_polarity/segment/cellpose_sam.py` — Cellpose-SAM wrapper
+- `src/quantipy_polarity/_cli_segment.py` — quantipy segment command
 - `tests/fixtures/_build.py` + `synthetic_fov.npz` — ground-truth fixture
 - `docs/superpowers/specs/` — design spec + codex review
 - `docs/superpowers/plans/` — phased implementation plans

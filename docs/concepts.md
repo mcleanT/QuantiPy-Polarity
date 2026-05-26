@@ -36,3 +36,50 @@ attribution) to the QP PCA-Cell-by-Cell algorithm — see `docs/validation.md`
 - Migration-front detection + per-cell migration alignment (Phase 4)
 - Plots + HTML report (Phases 4–5)
 - Interactive viewer + curated analyses (Phase 7)
+
+## Input Modes: TIF and ND2 Ingest (Phase 3+)
+
+QuantiPy Polarity supports three input modes. The `masks` mode (Phase 2) requires
+pre-segmented label masks. The `tif` and `nd2` modes (Phase 3) accept raw
+microscopy images and segment them using Cellpose-SAM.
+
+### TIF ingest
+
+Two schemes are supported:
+
+**Stack scheme** (`tif_scheme: stack`): A single multi-page TIF per FOV with
+channels as the first axis `(C, H, W)`. This is the default.
+
+**Multifile scheme** (`tif_scheme: multifile`): One TIF per channel per FOV,
+named `<fov_id>_ch{N}.tif` (controlled by `channel_suffix_template`).
+
+Both schemes normalize the membrane channel to float32 [0, 1] before
+segmentation. The `channel_membrane` config field selects which channel
+to use (0-indexed).
+
+### ND2 ingest
+
+`.nd2` files are loaded via `nd2reader` (included in `[pipeline]` extras).
+Pixel size is read from ND2 metadata and falls back to `pixel_size_um` from
+config if metadata is missing or invalid.
+
+Z-projection policy is controlled by `z_policy`:
+- `mip`: maximum intensity projection (recommended for thick samples)
+- `substack`: MIP over a specific z-range (`substack_range: [z_min, z_max]`)
+- `none`: use the middle z-plane
+
+### Cellpose-SAM segmentation
+
+After ingest, the membrane channel (uint16) is passed to Cellpose-SAM
+(`pretrained_model="cpsam"`, Cellpose ≥3.0). The `segment.diameter_px` config
+field sets the expected cell diameter in pixels. Label masks are validated
+for contiguous IDs (1..N, background=0) and written as uint16 TIFs.
+
+Label masks and membrane TIFs written by `quantipy segment` are fully
+compatible with `quantipy polarity` (Phase 2 masks-mode contract).
+
+### Coordinate conventions reminder
+
+All operations use `(y, x)` pixel coordinates (numpy/scikit-image convention).
+Angles are in degrees: `[0, 180)` for axial polarity. See the contract table
+in `src/quantipy_polarity/contracts.py` for the full schema.

@@ -13,7 +13,7 @@ phased roadmap.
 
 - ✅ Phase 1 — CLI shell, config schema, init-config, fast-tier CI
 - ✅ Phase 2 — Masks → polarity (smallest viable pipeline) — `quantipy polarity` + `quantipy aggregate`
-- ⏳ Phase 3 — TIF / ND2 ingest + Cellpose segmentation
+- ✅ Phase 3 — TIF / ND2 ingest + Cellpose-SAM segmentation
 - ⏳ Phase 4 — Migration front + visualization
 - ⏳ Phase 5 — Run orchestration + HTML report + resume/atomic-writes
 - ⏳ Phase 6 — Validation + demo bundle + GitHub Release
@@ -28,6 +28,16 @@ cd QuantiPy-Polarity
 python -m venv .venv && source .venv/bin/activate
 pip install -e .[dev]
 ```
+
+### Full pipeline install (TIF/ND2 ingest + Cellpose segmentation)
+
+```bash
+pip install -e ".[dev,pipeline]"
+```
+
+The `[pipeline]` extra installs `nd2reader`, `cellpose`, `matplotlib`, `tqdm`,
+and other dependencies required for raw-image processing. The base install
+(`pip install -e .`) is sufficient for the `masks` mode (Phase 2 quickstart).
 
 ## Verify
 
