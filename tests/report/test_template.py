@@ -4,7 +4,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import jinja2
-import pytest
 
 
 TEMPLATE_PATH = Path("src/quantipy_polarity/report/templates/report.html.j2")

@@ -11,7 +11,6 @@ Usage:
 from __future__ import annotations
 
 import hashlib
-import json
 from pathlib import Path
 
 import click
@@ -119,7 +118,6 @@ def _run_segment(cfg: Config, out_dir: Path, *, gpu: bool) -> None:
     from quantipy_polarity.segment.cellpose_sam import segment_fov
     from quantipy_polarity.segment._writer import write_fov_outputs
 
-    input_cfg = cfg.input
     seg_cfg = cfg.segment
 
     try:

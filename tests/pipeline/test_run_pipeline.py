@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from quantipy_polarity.config import Config
 from quantipy_polarity.pipeline.run import run_pipeline
-from quantipy_polarity.pipeline.state import config_hash, write_stage_state
+from quantipy_polarity.pipeline.state import write_stage_state
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -93,7 +93,6 @@ def test_run_pipeline_skips_done_stage(tmp_path: Path) -> None:
     out_dir = tmp_path / "out"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    chash = config_hash(cfg)
     # Pre-write "done" state with matching config hash for "polarity"
     write_stage_state(out_dir, "polarity", "done", cfg=cfg)
 

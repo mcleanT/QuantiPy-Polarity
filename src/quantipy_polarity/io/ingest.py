@@ -44,7 +44,6 @@ def build_fov_iterator(cfg: "Config"):
     Returns:
         Iterable of FOV data objects.
     """
-    from quantipy_polarity.config import InputMasks, InputND2, InputTIF
 
     input_cfg = cfg.input
 

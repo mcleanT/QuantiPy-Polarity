@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import numpy as np
 import pytest
-import tifffile
 
 from quantipy_polarity.io.tif import (
     TIFFOV,
@@ -89,7 +87,7 @@ def test_extract_channels_stack_out_of_range() -> None:
 
 
 def test_load_tif_fov_stack_roundtrip(tmp_path: Path) -> None:
-    data = write_synthetic_tif_stack(tmp_path, "FOV_01", n_cells=10, image_size=64)
+    write_synthetic_tif_stack(tmp_path, "FOV_01", n_cells=10, image_size=64)
     fov = load_tif_fov_stack(
         tmp_path / "FOV_01.tif",
         fov_id="FOV_01",
@@ -108,7 +106,7 @@ def test_load_tif_fov_stack_roundtrip(tmp_path: Path) -> None:
 
 
 def test_load_tif_fov_stack_no_nuclear(tmp_path: Path) -> None:
-    data = write_synthetic_tif_stack(tmp_path, "FOV_01", n_cells=10, image_size=64)
+    write_synthetic_tif_stack(tmp_path, "FOV_01", n_cells=10, image_size=64)
     fov = load_tif_fov_stack(
         tmp_path / "FOV_01.tif",
         fov_id="FOV_01",

@@ -7,7 +7,6 @@ mig_alignment in per_cell.parquet.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import click
@@ -23,7 +22,6 @@ from quantipy_polarity.migration.front_detect import (
     detect_front,
 )
 from quantipy_polarity.migration.front_io import write_front_parquet, read_front_parquet
-from quantipy_polarity.migration.distance import compute_per_cell_migration
 
 log = structlog.get_logger()
 
@@ -194,7 +192,8 @@ def _update_per_cell(
 ) -> None:
     """Update migration columns in per_cell.parquet in-place (atomic)."""
     from quantipy_polarity.migration.distance import compute_all_fovs
-    import os, tempfile
+    import os
+    import tempfile
 
     df = pd.read_parquet(per_cell_path)
     updated = compute_all_fovs(

@@ -8,7 +8,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from quantipy_polarity.contracts import PER_CELL_COLUMNS
 from quantipy_polarity.report.build import (

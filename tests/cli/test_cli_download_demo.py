@@ -110,7 +110,6 @@ def test_download_demo_network_failure(tmp_path):
         runner = CliRunner()
         result = runner.invoke(download_demo_cmd, ["--output", str(tmp_path / "demo")])
     assert result.exit_code != 0
-    output = result.output + (result.exception.__str__() if result.exception else "")
     assert (
         "fallback" in result.output.lower()
         or "clone" in result.output.lower()
@@ -181,8 +180,7 @@ def test_download_demo_strips_nested_demo_dir(tmp_path):
     assert result.exit_code == 0, result.output
     # config.yaml must be directly in out/, NOT in out/demo/
     assert (out / "config.yaml").exists(), (
-        f"config.yaml not found directly in {out}; "
-        f"actual files: {list(out.rglob('*'))}"
+        f"config.yaml not found directly in {out}; actual files: {list(out.rglob('*'))}"
     )
     assert not (out / "demo" / "config.yaml").exists(), (
         "double-nesting bug (out/demo/config.yaml) is still present — BLOCKER B2 not fixed"

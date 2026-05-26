@@ -15,7 +15,6 @@ Requires the `requests` + `tqdm` packages (both in the `pipeline` extra).
 from __future__ import annotations
 
 import hashlib
-import io
 import shutil
 import tempfile
 import zipfile
@@ -100,7 +99,7 @@ def _download_and_extract(url: str, output_dir: Path) -> None:
             for member in zf.infolist():
                 arc_name = member.filename
                 if strip_prefix and arc_name.startswith(strip_prefix):
-                    arc_name = arc_name[len(strip_prefix):]
+                    arc_name = arc_name[len(strip_prefix) :]
                 if not arc_name:  # was the top-level dir entry itself
                     continue
                 target = output_dir / arc_name

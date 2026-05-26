@@ -8,7 +8,6 @@ Stage identifiers must match the keys written to stage_status/<name>.json.
 
 from __future__ import annotations
 
-from typing import Callable
 
 from quantipy_polarity.pipeline.state import StageState
 

@@ -121,7 +121,6 @@ def test_segment_fov_import_error_without_cellpose(
 
 def test_segment_fov_invalid_shape() -> None:
     """segment_fov rejects non-2D/3D input."""
-    import importlib, sys
 
     # Only run this sub-test if cellpose is actually importable
     pytest.importorskip("cellpose")

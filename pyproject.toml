@@ -58,6 +58,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quantipy_polarity"]
+include = ["src/quantipy_polarity/data/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -18,7 +18,6 @@ from __future__ import annotations
 import dataclasses
 import logging
 from pathlib import Path
-from typing import NamedTuple
 
 import matplotlib
 

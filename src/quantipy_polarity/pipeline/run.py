@@ -10,15 +10,13 @@ functions used by the individual CLI subcommands.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import structlog
 
 from quantipy_polarity.config import Config
-from quantipy_polarity.pipeline.dag import STAGES, filter_stages, should_skip_stage
+from quantipy_polarity.pipeline.dag import filter_stages, should_skip_stage
 from quantipy_polarity.pipeline.state import (
-    StageState,
     config_hash,
     read_stage_state,
     write_stage_state,
@@ -181,7 +179,9 @@ def _stage_front(cfg: Config, out_dir: Path) -> None:
     if cfg.migration.front_method == "none" or not cfg.migration.detect_front:
         log.info(
             "stage_front_skipped",
-            reason="method_none" if cfg.migration.front_method == "none" else "detect_front_false",
+            reason="method_none"
+            if cfg.migration.front_method == "none"
+            else "detect_front_false",
         )
         return
 
@@ -238,7 +238,8 @@ def _stage_front(cfg: Config, out_dir: Path) -> None:
     if per_cell_path.exists() and results:
         import pandas as pd
         from quantipy_polarity.migration.distance import compute_all_fovs
-        import os, tempfile
+        import os
+        import tempfile
 
         df = pd.read_parquet(per_cell_path)
         updated = compute_all_fovs(

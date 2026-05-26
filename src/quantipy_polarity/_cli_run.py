@@ -10,7 +10,6 @@ Behavior:
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import click
@@ -76,7 +75,6 @@ def run_cmd(
     Stage order: ingest → segment → polarity → front → aggregate → plot → report
     """
     from quantipy_polarity.pipeline.run import run_pipeline
-    from quantipy_polarity.pipeline.state import read_stage_state
 
     cfg = Config.from_yaml(config_path)
     out_dir = Path(output_path or cfg.project.output_dir)

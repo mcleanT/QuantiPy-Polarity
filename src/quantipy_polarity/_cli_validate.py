@@ -1,15 +1,13 @@
 """Real `quantipy validate` command (Phase 6).
 
 Regenerates the QP-vs-Python comparison figure from the bundled synthetic
-validation parquets committed to data/validation/.
+validation parquets shipped inside the package at
+``quantipy_polarity/data/validation/``.
 
-Parquet resolution order (editable install / dev only in v0.1.0):
+Parquet resolution order:
   1. $QUANTIPY_VALIDATION_DIR env var (override for testing or custom data)
-  2. {repo_root}/data/validation/  (resolved relative to this file's location)
-
-For a pip-installed non-editable package, the parquets are not bundled and
-the command will raise a helpful error. This will be fixed in a minor release
-by moving data/ into the package tree.
+  2. Package-relative path: quantipy_polarity/data/validation/
+     (works for both editable installs and non-editable wheel installs)
 """
 
 from __future__ import annotations
@@ -24,6 +22,9 @@ from quantipy_polarity.cli import main
 
 _DEFAULT_OUTPUT = Path.home() / ".cache" / "quantipy" / "validation"
 
+# Package-bundled validation data directory (works for editable and wheel installs).
+_PACKAGE_DATA_DIR = Path(__file__).resolve().parent / "data" / "validation"
+
 
 def _find_validation_data_dir() -> Path:
     """Resolve bundled validation parquets directory."""
@@ -36,19 +37,17 @@ def _find_validation_data_dir() -> Path:
         raise click.ClickException(
             f"QUANTIPY_VALIDATION_DIR={env!r} does not exist or is not a directory."
         )
-    # 2. Repo-relative path (editable dev install)
-    candidate = (
-        Path(__file__).resolve().parent.parent.parent / "data" / "validation"
-    )
-    if candidate.is_dir() and (candidate / "qp_results.parquet").exists():
-        return candidate
+    # 2. Package-relative path (editable install and wheel install)
+    if (
+        _PACKAGE_DATA_DIR.is_dir()
+        and (_PACKAGE_DATA_DIR / "qp_results.parquet").exists()
+    ):
+        return _PACKAGE_DATA_DIR
     raise click.ClickException(
-        "Could not find bundled validation parquets. "
-        "Expected data/validation/qp_results.parquet relative to the repo root. "
-        "Run `git clone https://github.com/mcleanT/QuantiPy-Polarity` and "
-        "`pip install -e .[dev]` to get the bundled data, or set "
-        "QUANTIPY_VALIDATION_DIR to a directory containing qp_results.parquet "
-        "and python_results.parquet."
+        "Could not find bundled validation parquets inside the installed package. "
+        "Expected quantipy_polarity/data/validation/qp_results.parquet. "
+        "Reinstall the package or set QUANTIPY_VALIDATION_DIR to a directory "
+        "containing qp_results.parquet and python_results.parquet."
     )
 
 

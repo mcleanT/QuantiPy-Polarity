@@ -67,7 +67,6 @@ def gather_report_inputs(results_dir: Path) -> dict:
         Dictionary with keys used by the Jinja2 template.
     """
     import pandas as pd
-    import yaml
 
     data: dict = {
         "project_name": results_dir.name,
@@ -176,7 +175,6 @@ def build_report(
         output_html: Destination HTML file path.
         cfg: Optional Config object (used for project.name if available).
     """
-    from importlib.resources import files as _pkg_files
     from jinja2 import Environment, BaseLoader
 
     template_path = Path(__file__).parent / "templates" / "report.html.j2"

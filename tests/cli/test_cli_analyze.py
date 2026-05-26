@@ -9,7 +9,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 from click.testing import CliRunner
 
 from quantipy_polarity.cli import main

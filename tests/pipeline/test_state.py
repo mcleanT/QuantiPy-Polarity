@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import pytest
 
 from quantipy_polarity.config import Config, InputMasks
 from quantipy_polarity.pipeline.state import (

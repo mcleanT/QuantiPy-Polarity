@@ -158,12 +158,10 @@ def test_pair_masks_demo_layout_same_dir(tmp_path: Path) -> None:
 def test_pair_masks_demo_layout_with_seg_variants(tmp_path: Path) -> None:
     """_seg, _segmentation, _labels variants are also excluded from membrane scan."""
     for suffix in ("_seg", "_segmentation", "_labels"):
-        (tmp_path / f"fov_C_membrane.tif").write_bytes(b"")
+        (tmp_path / "fov_C_membrane.tif").write_bytes(b"")
         (tmp_path / f"fov_C{suffix}.tif").write_bytes(b"")
 
-        pairs = pair_masks_with_membranes(
-            tmp_path, tmp_path, mask_ext=".tif"
-        )
+        pairs = pair_masks_with_membranes(tmp_path, tmp_path, mask_ext=".tif")
         # Exactly 1 membrane-FOV pair
         assert len(pairs) == 1, f"Expected 1 pair for suffix={suffix}, got {len(pairs)}"
         fov_id, mem, msk = pairs[0]

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from quantipy_polarity.contracts import FrontResult
 from quantipy_polarity.migration.distance import (

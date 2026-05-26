@@ -13,13 +13,11 @@ import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
-import pytest
 
 from tests.fixtures._build import build_synthetic_fov
 
 
 def _make_fov_df(data: dict, fov_id: str = "FOV_01") -> pd.DataFrame:
-    labels = data["label_mask"]
     theta = data["theta_truth"]
     centroids = data["centroids"]
     rows = []

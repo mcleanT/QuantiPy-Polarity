@@ -5,12 +5,10 @@ Uses CliRunner + mocks — no real pipeline outputs or browser opening.
 
 from __future__ import annotations
 
-import textwrap
 from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 from click.testing import CliRunner
 
 from quantipy_polarity.cli import main

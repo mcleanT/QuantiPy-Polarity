@@ -130,7 +130,8 @@ def save_front_overlay(
 
     Returns path to the written PNG.
     """
-    import os, tempfile
+    import os
+    import tempfile
 
     fig = plot_front_overlay(membrane, labels, front_mask, **kwargs)
     out = Path(stem).with_suffix(".png")

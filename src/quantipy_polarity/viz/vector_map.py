@@ -99,7 +99,6 @@ def plot_vector_map(
         norm = mcolors.Normalize(vmin=0, vmax=max(mags.max(), 1e-9))
         cmap_obj = plt.get_cmap(cmap)
         for _, row in fov_df.iterrows():
-            cid = int(row["cell_id"])
             cy = float(row["centroid_y"])
             cx = float(row["centroid_x"])
             ang = float(row["axis_deg"])

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-import pytest
 import tifffile
 
 from quantipy_polarity.io.ingest import ingest_fovs, write_ingest_outputs

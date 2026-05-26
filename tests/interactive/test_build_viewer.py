@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import struct
 import zlib
 from pathlib import Path
@@ -174,9 +173,7 @@ def test_build_viewer_empty_parquet_raises(tmp_path: Path) -> None:
     """build_viewer raises ValueError when parquet has no rows."""
     agg_dir = tmp_path / "05_aggregated"
     agg_dir.mkdir(parents=True)
-    empty_df = pd.DataFrame(
-        columns=["fov_id", "cell_id", "magnitude", "axis_deg"]
-    )
+    empty_df = pd.DataFrame(columns=["fov_id", "cell_id", "magnitude", "axis_deg"])
     empty_df.to_parquet(agg_dir / "per_cell.parquet", index=False)
     output_path = tmp_path / "viewer.html"
     with pytest.raises(ValueError, match="no rows"):

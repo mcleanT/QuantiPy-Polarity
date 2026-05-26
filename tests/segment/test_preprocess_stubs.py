@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import inspect
 
-import pytest
-
 
 def test_segment_package_imports() -> None:
     """segment/ package and cellpose_sam module import without errors."""

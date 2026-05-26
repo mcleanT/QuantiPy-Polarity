@@ -1,8 +1,6 @@
 """Tests for validation/synthetic_data.py."""
 
-import numpy as np
 import pandas as pd
-import pytest
 from scipy.stats import pearsonr
 
 from quantipy_polarity.validation.synthetic_data import (

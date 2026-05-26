@@ -1,10 +1,8 @@
 """Tests for validation/qp_vs_python.py."""
 
 import json
-from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from quantipy_polarity.validation.qp_vs_python import (

@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 
 from quantipy_polarity.io.nd2 import (
-    ND2FOV,
     _normalize_to_float32,
     _pixel_size_from_nd2,
     _z_project,
@@ -124,7 +123,6 @@ def test_iter_nd2_dataset_import_error_without_nd2reader(
     original = sys.modules.get("nd2reader")
     sys.modules["nd2reader"] = None  # type: ignore[assignment]
     try:
-        from quantipy_polarity.io.nd2 import iter_nd2_dataset
         import importlib
         import quantipy_polarity.io.nd2 as nd2_mod
 

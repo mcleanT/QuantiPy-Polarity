@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import tifffile
 
 
 def build_synthetic_fov(
@@ -151,9 +152,6 @@ if __name__ == "__main__":
     print(f"Wrote {out}")
 
 
-import tifffile as _tifffile
-
-
 def write_synthetic_tif_stack(
     out_dir: Path,
     fov_id: str = "FOV_01",
@@ -177,7 +175,7 @@ def write_synthetic_tif_stack(
     rng = _np.random.default_rng(seed + 1)
     nuclear_u16 = rng.integers(0, 1000, size=(image_size, image_size), dtype=_np.uint16)
     stack = _np.stack([membrane_u16, nuclear_u16], axis=0)  # (C=2, H, W)
-    _tifffile.imwrite(out_dir / f"{fov_id}.tif", stack, photometric="minisblack")
+    tifffile.imwrite(out_dir / f"{fov_id}.tif", stack, photometric="minisblack")
     return data
 
 
@@ -202,6 +200,6 @@ def write_synthetic_tif_multifile(
     membrane_u16 = (data["membrane"] * 65535).clip(0, 65535).astype(_np.uint16)
     rng = _np.random.default_rng(seed + 1)
     nuclear_u16 = rng.integers(0, 1000, size=(image_size, image_size), dtype=_np.uint16)
-    _tifffile.imwrite(out_dir / f"{fov_id}_ch0.tif", membrane_u16)
-    _tifffile.imwrite(out_dir / f"{fov_id}_ch1.tif", nuclear_u16)
+    tifffile.imwrite(out_dir / f"{fov_id}_ch0.tif", membrane_u16)
+    tifffile.imwrite(out_dir / f"{fov_id}_ch1.tif", nuclear_u16)
     return data
