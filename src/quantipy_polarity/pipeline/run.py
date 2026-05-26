@@ -86,7 +86,9 @@ def run_pipeline(
             log.error("stage_failed", stage=stage_name, error=str(exc))
             raise RuntimeError(f"Stage '{stage_name}' failed: {exc}") from exc
 
-        write_stage_state(out_dir, stage_name, "done", cfg=cfg, preserve_started_at=True)
+        write_stage_state(
+            out_dir, stage_name, "done", cfg=cfg, preserve_started_at=True
+        )
         log.info("stage_done", stage=stage_name)
 
     log.info("pipeline_complete", out_dir=str(out_dir))
@@ -192,6 +194,7 @@ def _stage_front(cfg: Config, out_dir: Path) -> None:
 
     # Determine mask source
     from quantipy_polarity.config import InputMasks
+
     if isinstance(cfg.input, InputMasks):
         seg_dir = cfg.input.masks_dir
     else:
@@ -275,12 +278,17 @@ def _stage_plot(cfg: Config, out_dir: Path) -> None:
     pixel_size_um: float = getattr(cfg.input, "pixel_size_um", 0.65)
 
     from quantipy_polarity.config import InputMasks
+
     seg_dir = (
-        cfg.input.masks_dir if isinstance(cfg.input, InputMasks) else out_dir / "02_segmentation"
+        cfg.input.masks_dir
+        if isinstance(cfg.input, InputMasks)
+        else out_dir / "02_segmentation"
     )
 
     front_parquet_path = out_dir / "04_migration" / "front_um_per_fov.parquet"
-    front_df = read_front_parquet(front_parquet_path) if front_parquet_path.exists() else None
+    front_df = (
+        read_front_parquet(front_parquet_path) if front_parquet_path.exists() else None
+    )
 
     _generate_vector_maps(per_cell, seg_dir, plots_dir, pixel_size_um, cfg.viz)
     _generate_rose_plots(per_cell, plots_dir, cfg.viz)

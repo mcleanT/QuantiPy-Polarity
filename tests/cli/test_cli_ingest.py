@@ -152,9 +152,7 @@ def test_ingest_cmd_writes_stage_status_on_success(tmp_path: Path) -> None:
     cfg_path = _write_tif_config(tmp_path, output_dir=out_dir)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.io.ingest.ingest_fovs", return_value=["FOV_01"]
-    ):
+    with patch("quantipy_polarity.io.ingest.ingest_fovs", return_value=["FOV_01"]):
         result = runner.invoke(
             main,
             ["ingest", "--config", str(cfg_path), "--output", str(out_dir), "--force"],

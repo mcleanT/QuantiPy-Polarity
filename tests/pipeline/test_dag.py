@@ -30,7 +30,15 @@ def _failed_state(config_hash: str = HASH_A) -> StageState:
 
 
 def test_stages_canonical_order() -> None:
-    assert STAGES == ("ingest", "segment", "polarity", "front", "aggregate", "plot", "report")
+    assert STAGES == (
+        "ingest",
+        "segment",
+        "polarity",
+        "front",
+        "aggregate",
+        "plot",
+        "report",
+    )
 
 
 # ---------------------------------------------------------------------------

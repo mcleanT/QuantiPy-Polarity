@@ -32,12 +32,8 @@ def test_report_cmd_calls_build_report(tmp_path: Path) -> None:
     results_dir.mkdir(parents=True)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.report.build.build_report"
-    ) as mock_build:
-        result = runner.invoke(
-            main, ["report", "--results", str(results_dir)]
-        )
+    with patch("quantipy_polarity.report.build.build_report") as mock_build:
+        result = runner.invoke(main, ["report", "--results", str(results_dir)])
     assert result.exit_code == 0, result.output
     mock_build.assert_called_once()
     args, kwargs = mock_build.call_args
@@ -51,12 +47,8 @@ def test_report_cmd_default_output_path(tmp_path: Path) -> None:
     results_dir.mkdir(parents=True)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.report.build.build_report"
-    ) as mock_build:
-        result = runner.invoke(
-            main, ["report", "--results", str(results_dir)]
-        )
+    with patch("quantipy_polarity.report.build.build_report") as mock_build:
+        result = runner.invoke(main, ["report", "--results", str(results_dir)])
     assert result.exit_code == 0, result.output
     args, kwargs = mock_build.call_args
     # Second positional arg is output_html
@@ -70,9 +62,7 @@ def test_report_cmd_custom_output_path(tmp_path: Path) -> None:
     custom_html = Path("/tmp/x.html")
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.report.build.build_report"
-    ) as mock_build:
+    with patch("quantipy_polarity.report.build.build_report") as mock_build:
         result = runner.invoke(
             main,
             [

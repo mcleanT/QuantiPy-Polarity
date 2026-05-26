@@ -15,6 +15,7 @@ from quantipy_polarity.io.ingest import ingest_fovs, write_ingest_outputs
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _rand_membrane(h: int = 64, w: int = 64) -> np.ndarray:
     """Return a random float32 (H, W) array in [0, 1]."""
     rng = np.random.default_rng(0)

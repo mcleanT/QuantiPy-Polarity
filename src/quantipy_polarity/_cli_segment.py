@@ -163,4 +163,5 @@ def _run_segment(cfg: Config, out_dir: Path, *, gpu: bool) -> None:
 def _build_fov_iterator(cfg: Config):
     """Return an iterable of FOV objects. Delegates to io/ingest.build_fov_iterator."""
     from quantipy_polarity.io.ingest import build_fov_iterator
+
     return build_fov_iterator(cfg)

@@ -87,13 +87,21 @@ def ingest_cmd(
     try:
         fov_ids = ingest_fovs(cfg, out_dir)
         write_stage_state(
-            out_dir, "ingest", "done",
+            out_dir,
+            "ingest",
+            "done",
             cfg=cfg,
             preserve_started_at=True,
-            output_paths=[str(out_dir / "01_ingest" / f"{fid}_membrane.tif") for fid in fov_ids],
+            output_paths=[
+                str(out_dir / "01_ingest" / f"{fid}_membrane.tif") for fid in fov_ids
+            ],
         )
     except Exception:
-        write_stage_state(out_dir, "ingest", "failed", cfg=cfg, preserve_started_at=True)
+        write_stage_state(
+            out_dir, "ingest", "failed", cfg=cfg, preserve_started_at=True
+        )
         raise
 
-    click.echo(f"Ingest complete. {len(fov_ids)} FOV(s) written to {out_dir / '01_ingest'}")
+    click.echo(
+        f"Ingest complete. {len(fov_ids)} FOV(s) written to {out_dir / '01_ingest'}"
+    )

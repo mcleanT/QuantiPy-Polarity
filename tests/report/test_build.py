@@ -49,9 +49,7 @@ def _make_tiny_png(path: Path, width: int = 1000, height: int = 1000) -> None:
     """Create a minimal PNG using PIL."""
     from PIL import Image
 
-    img = Image.fromarray(
-        np.zeros((height, width, 3), dtype=np.uint8), mode="RGB"
-    )
+    img = Image.fromarray(np.zeros((height, width, 3), dtype=np.uint8), mode="RGB")
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path, format="PNG")
 
@@ -138,7 +136,9 @@ def test_build_report_no_external_urls(tmp_path: Path) -> None:
     out_html = tmp_path / "report.html"
     build_report(tmp_path, out_html)
     content = out_html.read_text(encoding="utf-8")
-    assert "http" not in content, "HTML contains external URL references (not self-contained)"
+    assert "http" not in content, (
+        "HTML contains external URL references (not self-contained)"
+    )
 
 
 # ---------------------------------------------------------------------------

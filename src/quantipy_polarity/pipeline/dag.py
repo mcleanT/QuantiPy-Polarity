@@ -73,8 +73,6 @@ def filter_stages(
         return list(STAGES)
     unknown = [s for s in requested if s not in STAGES]
     if unknown:
-        raise ValueError(
-            f"Unknown stage(s): {unknown!r}. Valid stages: {list(STAGES)}"
-        )
+        raise ValueError(f"Unknown stage(s): {unknown!r}. Valid stages: {list(STAGES)}")
     # Preserve canonical order even if caller provided a different order
     return [s for s in STAGES if s in requested]

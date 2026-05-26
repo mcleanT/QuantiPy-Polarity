@@ -70,12 +70,8 @@ def test_run_cmd_force_calls_run_pipeline(tmp_path: Path) -> None:
     cfg = _write_masks_config(tmp_path, output_dir=out_dir)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.pipeline.run.run_pipeline"
-    ) as mock_run:
-        result = runner.invoke(
-            main, ["run", "--config", str(cfg), "--force"]
-        )
+    with patch("quantipy_polarity.pipeline.run.run_pipeline") as mock_run:
+        result = runner.invoke(main, ["run", "--config", str(cfg), "--force"])
     assert result.exit_code == 0, result.output
     mock_run.assert_called_once()
     _, kwargs = mock_run.call_args
@@ -89,12 +85,8 @@ def test_run_cmd_resume_calls_run_pipeline(tmp_path: Path) -> None:
     cfg = _write_masks_config(tmp_path, output_dir=out_dir)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.pipeline.run.run_pipeline"
-    ) as mock_run:
-        result = runner.invoke(
-            main, ["run", "--config", str(cfg), "--resume"]
-        )
+    with patch("quantipy_polarity.pipeline.run.run_pipeline") as mock_run:
+        result = runner.invoke(main, ["run", "--config", str(cfg), "--resume"])
     assert result.exit_code == 0, result.output
     mock_run.assert_called_once()
     _, kwargs = mock_run.call_args
@@ -108,9 +100,7 @@ def test_run_cmd_stage_flag_passes_list(tmp_path: Path) -> None:
     cfg = _write_masks_config(tmp_path, output_dir=out_dir)
 
     runner = CliRunner()
-    with patch(
-        "quantipy_polarity.pipeline.run.run_pipeline"
-    ) as mock_run:
+    with patch("quantipy_polarity.pipeline.run.run_pipeline") as mock_run:
         result = runner.invoke(
             main,
             [
@@ -142,8 +132,6 @@ def test_run_cmd_runtime_error_exits_nonzero(tmp_path: Path) -> None:
         "quantipy_polarity.pipeline.run.run_pipeline",
         side_effect=RuntimeError("oops"),
     ):
-        result = runner.invoke(
-            main, ["run", "--config", str(cfg), "--force"]
-        )
+        result = runner.invoke(main, ["run", "--config", str(cfg), "--force"])
     assert result.exit_code != 0
     assert "oops" in result.output

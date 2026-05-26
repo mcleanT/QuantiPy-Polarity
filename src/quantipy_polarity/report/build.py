@@ -103,6 +103,7 @@ def gather_report_inputs(results_dir: Path) -> dict:
     if stage_status_dir.exists():
         for json_path in sorted(stage_status_dir.glob("*.json")):
             import json as _json
+
             try:
                 rec = _json.loads(json_path.read_text())
                 data["stage_statuses"][json_path.stem] = rec.get("status", "unknown")
@@ -123,7 +124,12 @@ def gather_report_inputs(results_dir: Path) -> dict:
                 for p in vec_dir.glob("*.png")
             )
         for fov_id in fov_ids:
-            row: dict = {"fov_id": fov_id, "vector_b64": None, "rose_b64": None, "n_cells": 0}
+            row: dict = {
+                "fov_id": fov_id,
+                "vector_b64": None,
+                "rose_b64": None,
+                "n_cells": 0,
+            }
             vec_png = vec_dir / f"{fov_id}.png"
             if not vec_png.exists():
                 # Try alternate naming patterns written by viz/vector_map.py
@@ -208,4 +214,8 @@ def build_report(
             pass
         raise
 
-    log.info("report_html_written", path=str(output_html), size_kb=output_html.stat().st_size // 1024)
+    log.info(
+        "report_html_written",
+        path=str(output_html),
+        size_kb=output_html.stat().st_size // 1024,
+    )

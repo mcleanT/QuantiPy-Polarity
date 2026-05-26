@@ -117,7 +117,11 @@ def write_stage_state(
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     existing = read_stage_state(out_dir, stage_name)
 
-    chash = config_hash(cfg) if cfg is not None else (existing.config_hash if existing else None)
+    chash = (
+        config_hash(cfg)
+        if cfg is not None
+        else (existing.config_hash if existing else None)
+    )
 
     started_at: str | None = None
     finished_at: str | None = None

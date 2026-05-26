@@ -57,7 +57,9 @@ def build_fov_iterator(cfg: "Config"):
             channel_segmentation=input_cfg.channel_segmentation,
             pixel_size_um=input_cfg.pixel_size_um,
             scheme=getattr(input_cfg, "tif_scheme", "stack"),
-            channel_suffix_template=getattr(input_cfg, "channel_suffix_template", "_ch{ch}"),
+            channel_suffix_template=getattr(
+                input_cfg, "channel_suffix_template", "_ch{ch}"
+            ),
         )
     elif input_cfg.mode == "nd2":
         from quantipy_polarity.io.nd2 import iter_nd2_dataset
@@ -91,7 +93,9 @@ def build_fov_iterator(cfg: "Config"):
         raise ValueError(f"Unknown input.mode: {input_cfg.mode!r}")
 
 
-def write_ingest_outputs(out_dir: Path, fov_id: str, membrane_float: np.ndarray) -> Path:
+def write_ingest_outputs(
+    out_dir: Path, fov_id: str, membrane_float: np.ndarray
+) -> Path:
     """Write a normalized per-FOV membrane TIF to 01_ingest/ atomically.
 
     The TIF is written as uint16 (membrane_float * 65535, clipped) so it is
