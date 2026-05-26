@@ -1,0 +1,1047 @@
+Reading additional input from stdin...
+OpenAI Codex v0.124.0 (research preview)
+--------
+workdir: /Users/mst36/Desktop/Projects/Science/Hughes Lab/Sachin/Polarity Quantification
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: low
+reasoning summaries: none
+session id: 019e6495-9508-7dd0-b1e5-0ef571aa19ad
+--------
+user
+Adversarial design-spec review for a public-repo carve-out.
+
+Read these files in full:
+1. docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md — the spec under review (18 sections)
+2. CLAUDE.md — the source research project this is being carved out of
+
+Context: The author is packaging the Python reimplementation of QuantifyPolarity (QP) — currently developed inside a research dir at 'Hughes Lab/Sachin/Polarity Quantification/' for an optoCelsr planar-polarity migration study — as a standalone public repository called QuantiPy-Polarity (target: github.com/mcleanT/QuantiPy-Polarity, MIT, single-author). The pipeline goes from raw .nd2/.tif/label-mask input through cellpose-SAM segmentation, boundary-PCA polarity quantification, migration-front detection, rose plots, polarity vector maps, and a self-contained HTML report. Three input entry points (nd2, multi-page tif, pre-segmented masks). One single-shot CLI (`quantipy run`). Python API exists as a byproduct of clean package layout but is not heavily advertised. Claude-Code-native (CLAUDE.md, .claude/settings.json, three slash commands ship in-repo). Validation evidence (QP-vs-Python linear-relationship scatter, ~114k cells) shipped as a release asset and regeneratable via `quantipy validate`.
+
+Author's known concerns / pressure points:
+- §4 layout: is the split between core (io/segment/polarity/migration/viz/report/interactive) and peer subpackages (analyses/, validation/) right, or does it overcomplicate v0.1.0?
+- §5 CLI surface: is `quantipy run` + 11 subcommands the right granularity, or should it collapse?
+- §6 config: is a single YAML the right shape, or will users want per-stage configs?
+- §8 interactive viewers: the matplotlib-based debug viewer + interactive front tuner are the most fragile components; is that approach sound or should they be web/Bokeh/Napari instead?
+- §11 distribution: pinning lower-bound versions only — is that going to bite users in 12 months?
+- §15 carve-out plan: 'copy + refactor, do not move' — is that safe or will the two diverge?
+- §16 module lift table: are any lifts under-specified?
+
+Evaluate:
+A. Scope appropriateness for v0.1.0 — too ambitious / about right / under-scoped
+B. Layout choices — does the file/module structure match how users will actually use the tool?
+C. CLI ergonomics — would a biologist with no Python background succeed at the quickstart?
+D. Generality claim — does 'fully channel/marker-agnostic' hold up given the underlying algorithm assumptions (boundary PCA, axial statistics, migration-front detection assumes collective cell migration)?
+E. Validation story — is shipping QP-vs-Python correlation evidence (without shipping QP itself) credible to a reviewer / referee?
+F. Risk and reversibility — what fails most catastrophically; how recoverable?
+G. Unanticipated issues — what's missing that the author didn't list in §17 open items?
+
+Format your response as:
+## Summary verdict
+[one paragraph: proceed-as-spec'd / revise-and-proceed / replace]
+
+## Specific issues (ordered by severity)
+[numbered. each issue: which spec section, what's wrong, suggested fix. ≤4 sentences per issue]
+
+## Things the spec does well
+[brief — what to preserve through revisions]
+
+## Recommended revisions before writing-plans
+[ordered list]
+
+Under 1500 words. Be direct; the author explicitly asked for challenge, not validation.
+codex
+I’ll read both documents first and then give the spec review in the requested adversarial format. Since the workspace is read-only, I’ll keep this to inspection and analysis.
+exec
+/bin/zsh -lc "wc -l docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md CLAUDE.md && sed -n '1,260p' docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md" in /Users/mst36/Desktop/Projects/Science/Hughes Lab/Sachin/Polarity Quantification
+exec
+/bin/zsh -lc "sed -n '1,260p' CLAUDE.md" in /Users/mst36/Desktop/Projects/Science/Hughes Lab/Sachin/Polarity Quantification
+ succeeded in 210ms:
+# Polarity Quantification — optoCelsr 25h Migration
+
+Reimplementation + validation of the QP (QuantifyPolarity) PCA Cell-by-Cell
+polarity pipeline in Python, plus migration-front analysis on optoCelsr
+clones C10 and D11 (25-hour live migration).
+
+## Environment
+
+```bash
+conda activate optocelsr-polarity         # python=3.11, cellpose-SAM, nd2reader, etc.
+cd "<repo>/Sachin/Polarity Quantification"
+```
+
+`pipeline/environment.yml` is the source of truth. Tests: `pytest pipeline/tests/`.
+
+## Directory layout
+
+```
+pGK optoCelsr 25 Hour Migration Clones May 2026/  # raw .nd2 input
+QuantifyPolarity.2022.2.1.Mac.zip                 # vendored QP (run via stage 04)
+pipeline/                                         # all stage scripts + libs + tests
+  ├── 01_nd2_to_tif.py        Stage 1   ND2 → per-FOV TIF (camera-native uint16)
+  ├── 01b_zproject.py         Stage 1b  optional z-projection helper
+  ├── 02_segment.py           Stage 2   Cellpose-SAM segmentation + QC
+  ├── 03_build_qp_input.py    Stage 3   assemble QP's expected input folder
+  ├── 03b_fix_undersegmented  Stage 3b  split anomalous merged cells via skeleton
+  ├── 04_run_qp.py            Stage 4   subprocess QP (probe + acceptance gate)
+  ├── 04b_polarity_python.py  Stage 4b  Python reimplementation (boundary-PCA)
+  ├── 05_aggregate.py         Stage 5   per-clone parquet aggregation
+  ├── 06_plot.py              Stage 6   rose / heatmap plots
+  ├── debug_polarity.py       INTERACTIVE per-cell viewer  ← see below
+  ├── recompute_migration_v{2,3}.py     migration-front recomputes
+  ├── plot_*.py / run_*.py / gen_*.py   one-off analyses + figure builders
+  ├── lib/                    shared modules (io, qp, axial, segmentation, …)
+  └── tests/                  pytest suite, one test_*.py per lib module
+derived_mip/                  # outputs for MIP projection mode (primary)
+  ├── 01_tif_per_fov/         Stage 1 outputs
+  ├── 02_segmentation/        Stage 2 outputs
+  ├── 03_quantifypolarity_input/   Stage 3 — QP-shaped layout; also holds QP's
+  │                                Result/Cell_Identity.tif label masks
+  ├── 04b_polarity_python{,_v2}/   Stage 4b outputs (v2 = updated PCA)
+  ├── 05_aggregated/          per-clone parquets
+  ├── 06_plots/               per-clone rose plots
+  └── 07_comparison/          QP-vs-Python correlation parquets + figures
+derived_substack/             # parallel pipeline with substack z-policy
+qp_validation/                # standalone QP acceptance test
+docs/superpowers/             # design specs + plans + codex reviews
+  ├── plans/2026-05-13-optocelsr-polarity-quantification.md
+  └── specs/2026-05-13-optocelsr-polarity-quantification-design.md
+presentation figures/         # slide-shaped exports for the storyboarded deck
+  └── slide_*/                one folder per slide (01–10)
+reports/                      # additional analyses (HTML gallery, AR-stratified, …)
+.living/learnings.md          # session-portable findings (auto-surfaced)
+```
+
+## Key configs
+
+`pipeline/config.yaml` is a placeholder for tests. Real runs use one of:
+- `pipeline/config_mip.yaml` — MIP z-policy (primary; outputs → `derived_mip/`)
+- `pipeline/config_substack.yaml` — substack z-policy (→ `derived_substack/`)
+
+Pass via `--config` to any stage script.
+
+## Interactive per-cell viewer
+
+`python -m pipeline.debug_polarity --clone C10 --fov FOV_01`
+
+All 50 FOVs (C10×22 + D11×28) reachable from the in-window dropdown / ←→.
+`--help` shows the quickstart epilog. Full keybindings + display convention
++ data-source freshness notes are in the module docstring at top of
+`pipeline/debug_polarity.py`.
+
+**Data freshness gotcha** (already logged in `.living/learnings.md`):
+the migration front + green arrows are recomputed live via
+`compute_migration_field` (v6 real-bg classification — handles fragmented
+open regions correctly, kills thin-sliver corner artifacts via erosion);
+the per-cell QP/Py axes are loaded from `derived_mip/07_comparison/per_cell.parquet`
+(~94k cells). Pass `--parquet derived_mip/07_comparison/per_cell_v2.parquet`
+for the newer v3 outward-side QC pass (~114k cells).
+
+## Comparison parquets (cheat sheet)
+
+| File | Rows | Notes |
+|------|------|-------|
+| `per_cell.parquet` | 94k | Original QP-vs-Python comparison; default viewer source |
+| `per_cell_v2.parquet` | 114k | v3 outward-side QC; adds `mig_*_v2` columns |
+| `per_cell_v2_oldfront.parquet` | 114k | Same shape, kept as old-front baseline |
+| `per_cell_residual.parquet` | 84k | Earlier residual-angle table; superseded |
+| `per_cell_migration.parquet` | 84k | Earlier migration-only table; superseded |
+| `per_cell_k1.parquet` | — | k=1 alignment study |
+
+Algorithm provenance for the live migration field is in the docstring of
+`compute_migration_field` (`pipeline/debug_polarity.py`).
+
+## Conventions inherited from upstream
+
+This project inherits the Science meta-level CLAUDE.md
+(`Science/CLAUDE.md`) and the global `~/.claude/CLAUDE.md`, so subagent
+dispatch rules, figure standards (Nature-style palette, 600 DPI,
+constrained_layout, `pdf.fonttype=42`), and the `.living/` update protocol
+all apply here. Project-local conventions take precedence — none are
+currently overridden.
+
+ succeeded in 248ms:
+     525 docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md
+     102 CLAUDE.md
+     627 total
+# QuantiPy Polarity — Public Repo Design
+
+**Date:** 2026-05-26
+**Target repo:** https://github.com/mcleanT/QuantiPy-Polarity
+**Source dir:** `Science/Hughes Lab/Sachin/Polarity Quantification/`
+**New location:** `Science/QuantiPy-Polarity/` (sibling to `Hughes Lab/`)
+**Status:** Awaiting user review before transition to writing-plans
+
+---
+
+## 1. Purpose
+
+Package the existing Python reimplementation of QuantifyPolarity (QP) — currently developed in `Hughes Lab/Sachin/Polarity Quantification/` — as a standalone public repository: **QuantiPy Polarity**.
+
+The single-shot promise: a user feeds in raw microscopy images and receives per-FOV polarity maps, rose plots, quantitative tables, migration-front overlays, and a self-contained HTML report — without needing to install the original QP `.app` binary or understand the staged-pipeline internals.
+
+## 2. Goals and non-goals
+
+**Goals:**
+- One CLI command (`quantipy run`) takes raw images to all outputs.
+- Fully marker-agnostic — works for any planar polarity marker (Vangl, Frizzled, Celsr1, Crumbs, etc.) via config.
+- Three input entry points: `.nd2`, multi-page `.tif`, or pre-segmented label masks.
+- Python implementation only — no vendored QP binary.
+- Claude-Code-native: `CLAUDE.md`, `.claude/settings.json`, and three slash commands ship in-repo.
+- Ship validation evidence (QP-vs-Python linear-relationship figure) so reviewers can verify equivalence.
+- MIT license, single-author authorship.
+
+**Non-goals (v0.1.0):**
+- PyPI publishing (deferred to v0.2).
+- Vendor the QP `.app` binary (cite the original tool instead).
+- Generalize to non-planar-polarity quantification (e.g., apical-basal).
+- Support `.lif` / `.czi` / `.lsm` input formats (deferred; can add later via `aicsimageio`).
+- mkdocs documentation site (plain markdown is sufficient for v0.1.0).
+
+## 3. Scope decisions (resolved during brainstorming)
+
+| Decision | Resolution |
+|---|---|
+| Scope | Core pipeline + curated analyses (~25 files) |
+| Entry point | CLI-first (`quantipy ...`), Python API exists for free via clean package layout but is not heavily advertised |
+| Input formats | `.nd2`, multi-page `.tif/.tiff`, pre-segmented label masks |
+| Generality | Fully generic — channel indices and markers configurable via YAML |
+| Outputs | Per-FOV polarity maps + rose plots + quantitative tables + migration overlays + HTML report |
+| QP binary | Python-only; drop vendored `.app`; cite original QP paper |
+| License | MIT |
+| Sample data | Tiny synthetic fixture in-repo + real FOV via GitHub Releases (not git-lfs) |
+| Claude-Code integration | `CLAUDE.md` + `.claude/settings.json` + three custom slash commands |
+| Repo home | Personal account (`mcleanT/QuantiPy-Polarity`), single-author, with `CITATION.cff` |
+| Packaging | Approach A — clean `src/` Python package layout, CLI documented as primary entry |
+| Validation | Dedicated `validation/` subpackage shipping the QP-vs-Python linear-relationship figure as static evidence |
+
+## 4. Repository layout
+
+```
+QuantiPy-Polarity/
+├── README.md                         # Install, quickstart, screenshot, citation
+├── LICENSE                           # MIT
+├── CITATION.cff                      # GitHub "Cite this repository" support
+├── CONTRIBUTING.md
+├── pyproject.toml                    # Build, deps, console_scripts entry
+├── environment.yml                   # Conda alternative for users who need it
+├── CLAUDE.md                         # Orientation for Claude-Code sessions
+├── .claude/
+│   ├── settings.json                 # Pre-approved safe Bash commands
+│   └── commands/
+│       ├── quantipy-run.md
+│       ├── quantipy-debug-fov.md
+│       └── quantipy-front-tune.md
+├── .github/workflows/
+│   ├── ci.yml                        # pytest, Python 3.11+3.12, macOS+Ubuntu
+│   └── release.yml                   # Upload demo + validation assets to Releases
+├── src/
+│   └── quantipy_polarity/
+│       ├── __init__.py
+│       ├── cli.py                    # Click root + subcommand registry
+│       ├── config.py                 # Pydantic schema + YAML loader
+│       ├── io/
+│       │   ├── nd2.py
+│       │   ├── tif.py
+│       │   └── masks.py
+│       ├── segment/
+│       │   ├── cellpose.py
+│       │   └── postprocess.py
+│       ├── polarity/
+│       │   ├── boundary_pca.py
+│       │   └── per_cell.py
+│       ├── migration/
+│       │   ├── front.py              # Automated (v3 outward-side)
+│       │   ├── tune.py               # Interactive parameter tuner
+│       │   └── local.py              # Per-cell local migration direction
+│       ├── viz/
+│       │   ├── style.py              # Nature-style mpl params, palette
+│       │   ├── polarity_map.py
+│       │   ├── rose.py
+│       │   └── overlay.py
+│       ├── report/
+│       │   ├── html.py               # Jinja2 + base64 inlining
+│       │   └── templates/
+│       ├── interactive/
+│       │   └── viewer.py             # debug_polarity refactor
+│       ├── analyses/                 # Opt-in analyses, registry-based
+│       │   ├── __init__.py           # Registry of analyses for `quantipy analyze <name>`
+│       │   ├── per_fov_rose.py
+│       │   ├── polarity_heatmap.py
+│       │   ├── ar_stratified_rose.py
+│       │   ├── axis_alignment.py
+│       │   ├── magnitude_vs_distance.py
+│       │   └── polarization_decline.py
+│       └── validation/
+│           ├── linear_relationship.py    # Regenerates QP-vs-Python scatter
+│           └── README.md                 # Provenance, sample sizes, QP version
+├── tests/
+│   ├── fixtures/
+│   │   ├── synthetic_fov.tif
+│   │   └── _build.py                 # Procedural fixture generator
+│   ├── conftest.py
+│   ├── test_config.py
+│   ├── test_io.py
+│   ├── test_segment.py
+│   ├── test_polarity.py
+│   ├── test_front.py
+│   ├── test_viz.py
+│   ├── test_cli.py
+│   └── test_e2e.py                   # quantipy run on synthetic_fov
+├── examples/
+│   ├── quickstart.md
+│   ├── notebooks/
+│   │   └── exploring_polarity.ipynb
+│   └── configs/
+│       ├── default.yaml
+│       └── celsr_optoclones.yaml
+└── docs/
+    ├── concepts.md
+    ├── pipeline.md
+    ├── cli-reference.md
+    ├── config-reference.md
+    ├── outputs.md
+    ├── interactive-viewer.md
+    ├── migration-front.md
+    ├── validation.md
+    └── citing.md
+```
+
+### Layout rationale
+
+- `src/` layout (not flat) prevents accidental local-import wins during tests and is the standard for PyPI-publishable scientific packages.
+- Subpackages organized by **concern** (`io/`, `segment/`, `polarity/`, ...) rather than stage number. Pipeline ordering is defined in `cli.py`, not in directory names. Python module names cannot begin with digits, so this is also a hard requirement for the Python API to exist at all.
+- `analyses/` and `validation/` are peers to the core modules — `analyses/` is the "curated analyses" bucket from the scope decision; `validation/` is the dedicated home for QP-vs-Python evidence.
+- `.claude/commands/` ships three slash commands. `.claude/settings.json` pre-approves read-only Bash so users avoid permission prompts on first run.
+
+## 5. CLI surface
+
+All commands installed via `pyproject.toml`'s `[project.scripts]` as `quantipy = "quantipy_polarity.cli:main"`.
+
+| Command | Wraps module | Purpose |
+|---|---|---|
+| `quantipy run` | All stages | One-shot: raw images → all outputs |
+| `quantipy ingest` | `io/` | nd2/tif → normalized per-FOV TIFs (auto-detects format) |
+| `quantipy segment` | `segment/` | Cellpose-SAM → label masks |
+| `quantipy polarity` | `polarity/` | Label masks + membrane channel → per-cell axes |
+| `quantipy front` | `migration/` | Migration front + local arrows; `--auto` or `--interactive` |
+| `quantipy aggregate` | `polarity/per_cell.py` | Per-FOV parquet → experiment parquet |
+| `quantipy plot` | `viz/` | Rose plots, polarity maps, overlays |
+| `quantipy report` | `report/` | Build self-contained HTML report |
+| `quantipy debug` | `interactive/` | Interactive per-cell viewer |
+| `quantipy analyze <name>` | `analyses/<name>` | Run a curated analysis from the registry |
+| `quantipy validate` | `validation/` | Regenerate QP-vs-Python linear-relationship figure |
+| `quantipy download-demo` | — | Pull demo FOV from latest GitHub Release |
+
+Every subcommand accepts `--config <path>`, `--input <path>`, `--output <path>`. `quantipy run` is the documented single-shot path; the others exist for redoing one stage without rerunning the full pipeline.
+
+### Input auto-detection
+
+`quantipy run --input ./raw` inspects the input directory:
+- `*.nd2` files present → `io/nd2` path (full pipeline including stage 1)
+- `*.tif/*.tiff` files only → `io/tif` path (skip ND2 conversion; validate dimensions/channels)
+- Label-mask TIFs paired with membrane TIFs → `io/masks` path (skip ingest + segmentation, jump to `polarity/`)
+
+Explicit override available via `input.source` in config (`nd2 | tif | masks`) for ambiguous directories.
+
+## 6. Configuration
+
+Single YAML, Pydantic-validated, defaults baked in so a minimal config (just `input.path`) works.
+
+```yaml
+project:
+  name: my_experiment
+  output_dir: ./results
+
+input:
+  source: auto                     # auto | nd2 | tif | masks
+  path: ./raw
+  z_policy: mip                    # mip | substack | none
+  substack_range: [3, 12]
+  channel_membrane: 1              # 0-indexed
+  channel_segmentation: 1
+  pixel_size_um: 0.65
+
+segment:
+  model: cellpose-sam              # cellpose-sam | user_supplied
+  diameter_px: 60
+  min_size_px: 100
+  fix_undersegmented: true
+  user_masks_dir: null
+
+polarity:
+  method: boundary_pca
+  axial: true
+  weight: magnitude                # magnitude | uniform
+  exclude_edge_cells: true
+
+migration:
+  detect_front: true
+  front_method: v3_outward         # v3_outward | none
+  erosion_px: 10
+  classify_fragments: true
+  local_direction: true
+
+viz:
+  style: nature                    # nature | minimal
+  rose_bins: 24
+  half_disk: true
+  per_fov_maps: true
+  overlay_dpi: 600
+  vector_scale: 1.0
+
+report:
+  html: true
+  embed_thumbnails: true
+  include_per_cell_parquet: true
+
+analyses:                          # opt-in; run after core pipeline
+  - per_fov_rose
+  - polarity_heatmap
+```
+
+Each subcommand validates only the slice it needs (`quantipy plot` does not require `segment.diameter_px`). Config snapshot is written to `results/run_config.yaml` for reproducibility. `examples/configs/celsr_optoclones.yaml` ships as a real-world reference config (the actual one used for the optoCelsr analysis).
+
+## 7. Output layout
+
+```
+results/
+├── run_config.yaml                 # Resolved config snapshot
+├── run_info.json                   # Version, timestamps, input hash, cell counts
+├── 01_ingest/                      # Per-FOV normalized TIFs
+├── 02_segmentation/                # Label masks + QC overlays
+├── 03_polarity/
+│   ├── per_fov/                    # Per-FOV polarity parquets
+│   └── maps/                       # Vector overlays (PNG + PDF)
+├── 04_migration/
+│   ├── front_overlays/             # Front + arrows (PNG + PDF)
+│   └── per_cell_migration.parquet
+├── 05_aggregated/
+│   └── per_cell.parquet            # Experiment-wide table
+├── 06_plots/
+│   ├── rose_per_fov.pdf
+│   ├── rose_aggregate.pdf
+│   └── polarity_heatmaps.pdf
+└── report.html                     # Single-file self-contained report
+```
+
+codex
+I have the project orientation and the first half of the public-repo spec. I’m pulling the remaining spec sections now, especially the fragile areas: interactive tooling, dependency policy, validation, and carve-out mechanics.
+exec
+/bin/zsh -lc "sed -n '261,560p' docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md" in /Users/mst36/Desktop/Projects/Science/Hughes Lab/Sachin/Polarity Quantification
+exec
+/bin/zsh -lc 'rg -n "''^## |interactive|validation|Cellpose|cellpose|migration|front|QP|config|environment|pyproject|CLI|TODO|open|risk|license|copy|refactor|module|lift" docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md CLAUDE.md' in /Users/mst36/Desktop/Projects/Science/Hughes Lab/Sachin/Polarity Quantification
+ succeeded in 161ms:
+
+### HTML report
+
+Self-contained — all figures base64-inlined so the file is portable on its own:
+
+1. Header: project name, timestamp, config hash, link to `per_cell.parquet`
+2. Summary stats: N FOVs, N cells, median polarity magnitude, mean axis-vs-migration alignment, QC flag counts
+3. Per-FOV gallery: thumbnail vector overlay + thumbnail rose plot + count chip per FOV
+4. Aggregate rose (full-experiment half-disk)
+5. Run config (expandable YAML block)
+6. Citation block: BibTeX + Zenodo DOI placeholder
+
+`quantipy report --results ./results --output ./report.html` regenerates the report from an existing run dir without rerunning the pipeline.
+
+## 8. Interactive viewers
+
+### `quantipy debug` — per-cell viewer
+
+`quantipy debug --results ./results [--fov FOV_NN]`
+
+Refactor of `debug_polarity.py`, generalized (drop optoCelsr-specific labels). Layout:
+
+- **Left panel:** FOV with membrane channel + cell outlines + per-cell polarity axes (color = magnitude). Click cells to select.
+- **Right panel:** Selected cell's boundary trace, PCA axes, and parquet row.
+- **Top bar:** FOV dropdown, ← → nav, colormap toggle, migration-front toggle.
+- **Bottom strip:** Current-FOV rose plot, selected cell highlighted as red wedge.
+
+Keybindings preserved from current viewer: `←/→` FOV nav, `↑/↓` cell nav within FOV, `s` save figure, `r` reset zoom.
+
+Reads from `results/05_aggregated/per_cell.parquet`. Read-only over completed runs; never re-runs pipeline stages.
+
+### `quantipy front --interactive` — front tuner
+
+Same window backbone as the debug viewer, but the right panel is a parameter pane with live sliders:
+
+- `erosion_px` (0–30)
+- `classify_fragments` (toggle)
+- `min_fragment_area_px`
+- `front_method` (`v3_outward` | `none`)
+
+Slider changes re-run `migration/front.compute()` on the cached segmentation (no resegmentation; sub-second updates). Buttons:
+
+- **Save params** — write chosen values back to `config.migration.*`
+- **Apply to all FOVs** — re-run `quantipy front --auto` with new params across experiment
+
+Both viewers detect non-interactive matplotlib backends and print SSH hints instead of crashing.
+
+### Automated migration front
+
+`quantipy front --auto` is the default path called by `quantipy run`. Lifts from `recompute_migration_v3.py` + `compute_migration_field` (v6 real-bg fragment classification, erosion to suppress thin-sliver corner artifacts). Algorithm provenance documented in `docs/migration-front.md`.
+
+## 9. Validation evidence
+
+The QP-vs-Python correlation is first-class evidence for the public repo — reviewers should be able to verify equivalence without installing QP themselves.
+
+- `src/quantipy_polarity/validation/linear_relationship.py` regenerates the scatter (axis correlation + magnitude correlation, linear fit, R², 95% CI).
+- Comparison data lives in **GitHub Releases** as `validation_per_cell.parquet` (~few MB, lifted from `derived_mip/07_comparison/per_cell_v2.parquet`, ~114k cells C10+D11).
+- `quantipy validate` downloads on first call, caches to `~/.cache/quantipy/validation/`, regenerates the figure into the output dir.
+- `docs/validation.md` documents methodology, sample sizes, the exact QP version validated against (`QuantifyPolarity.2022.2.1.Mac`), and reported correlation coefficients.
+
+## 10. Claude-Code integration
+
+### `CLAUDE.md`
+
+Orients Claude-Code sessions opened in the repo:
+- One-paragraph project description
+- CLI command table (so Claude has the surface area)
+- Where the config lives, demo-data invocation
+- Pointer to `docs/` and the three slash commands
+- "Read `docs/pipeline.md` before modifying any stage" guard
+
+### `.claude/settings.json`
+
+Pre-approves safe read-only commands:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(quantipy *)",
+      "Bash(pytest *)",
+      "Bash(ls *)", "Bash(cat *)", "Bash(grep *)",
+      "Bash(git status)", "Bash(git diff *)", "Bash(git log *)"
+    ]
+  }
+}
+```
+
+Writes, pushes, installs still prompt.
+
+### Slash commands
+
+| Command | Wraps | When to use |
+|---|---|---|
+| `/quantipy-run` | `quantipy run` | One-shot end-to-end. Scaffolds default config if none found; asks before launching. |
+| `/quantipy-debug-fov [FOV]` | `quantipy debug --fov $1` | Open viewer on FOV (or pick from dropdown). |
+| `/quantipy-front-tune` | `quantipy front --interactive` | Tune front params, save back to config. |
+
+Each command is a short markdown file with frontmatter; intentionally lightweight — convenience entry points, not autonomous agents.
+
+## 11. Distribution
+
+### `pyproject.toml`
+
+```toml
+[project]
+name = "quantipy-polarity"
+version = "0.1.0"
+description = "Single-shot planar polarity quantification from raw microscopy images"
+authors = [{name = "<full name TBD>", email = "taggartmc@pennmedicine.upenn.edu"}]
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pandas>=2.1",
+  "pyarrow>=14",
+  "tifffile>=2024.1",
+  "nd2reader>=3.3",
+  "scikit-image>=0.22",
+  "cellpose>=3.0",
+  "matplotlib>=3.8",
+  "click>=8.1",
+  "pydantic>=2.5",
+  "pyyaml>=6.0",
+  "jinja2>=3.1",
+  "structlog>=24.1",
+  "tqdm>=4.66",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov", "ruff>=0.3", "mypy>=1.8"]
+notebooks = ["jupyter", "ipywidgets"]
+
+[project.scripts]
+quantipy = "quantipy_polarity.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/quantipy_polarity"]
+```
+
+### Install paths (documented order)
+
+1. `pip install git+https://github.com/mcleanT/QuantiPy-Polarity.git`
+2. `git clone https://github.com/mcleanT/QuantiPy-Polarity.git && pip install -e .[dev]`
+3. Conda: `conda env create -f environment.yml && conda activate quantipy && pip install -e .`
+
+PyPI publishing deferred to v0.2.
+
+### Versioning
+
+SemVer. v0.1.0 = first public release. GitHub Releases cut from tags. `release.yml` uploads demo + validation parquet assets per tagged release. `quantipy --version` reads from `importlib.metadata`.
+
+## 12. Sample data
+
+### Synthetic (in-repo)
+
+`tests/fixtures/synthetic_fov.tif` (~1–3 MB):
+- Procedurally generated by committed `tests/fixtures/_build.py` (Voronoi cells with known per-cell polarity ground truth).
+- Doubles as regression fixture: `test_polarity.py` asserts boundary-PCA recovers seeded axis within tolerance.
+- CI runs full `quantipy run` end-to-end on this fixture in <30s with no binary download.
+
+### Real demo FOV (GitHub Releases)
+
+- One clean FOV from the optoCelsr dataset (likely C10/FOV_04) uploaded as a Release asset on the v0.1.0 tag.
+- Bundle: `demo_C10_FOV04.zip` containing raw `.nd2` + reference outputs.
+- `quantipy download-demo` fetches from `https://github.com/mcleanT/QuantiPy-Polarity/releases/latest/download/demo_C10_FOV04.zip`, caches to `~/.cache/quantipy/demo/`, returns the local path.
+
+### README quickstart
+
+```bash
+pip install git+https://github.com/mcleanT/QuantiPy-Polarity.git
+quantipy download-demo
+quantipy run --input ~/.cache/quantipy/demo --output ./results
+open ./results/report.html
+```
+
+## 13. Testing + CI
+
+- `tests/` mirrors existing `pipeline/tests/` suite, retargeted to new import paths.
+- Per-module tests: `test_io.py`, `test_segment.py`, `test_polarity.py`, `test_front.py`, `test_viz.py`, `test_cli.py`, `test_config.py`.
+- Integration test `test_e2e.py` runs `quantipy run` on synthetic fixture, asserts presence + shape of expected outputs, parses report HTML.
+- `ci.yml`: pytest on Python 3.11 + 3.12, Ubuntu + macOS. Cellpose-SAM weights cached between runs.
+- No GPU in CI — synthetic input is small enough for CPU cellpose in seconds.
+
+## 14. Documentation
+
+| File | Audience | Length target |
+|---|---|---|
+| `README.md` | First-time visitor | One scroll: install, quickstart, screenshot, citation |
+| `docs/concepts.md` | New-to-QP biologist | Planar polarity primer; what boundary-PCA measures |
+| `docs/pipeline.md` | Anyone running the tool | Stage diagram + data flow + per-stage rationale |
+| `docs/cli-reference.md` | Power user | Every command, every flag (auto-generated from Click) |
+| `docs/config-reference.md` | Anyone writing a config | Field-by-field reference, defaults, examples |
+| `docs/outputs.md` | Anyone reading results | What every file means + parquet schema |
+| `docs/interactive-viewer.md` | Debug viewer user | Screenshots, keybindings, workflows |
+| `docs/migration-front.md` | Migration analyst | Algorithm provenance, tuning guide |
+| `docs/validation.md` | Reviewer / sceptic | QP-vs-Python methodology, scatter, sample sizes, QP version |
+| `docs/citing.md` | Citing user | BibTeX, CITATION.cff pointer, original QP paper link |
+
+No mkdocs site for v0.1.0 — plain markdown on GitHub is sufficient. Revisit at v0.2.
+
+## 15. Carve-out plan from `Hughes Lab/Sachin/Polarity Quantification/`
+
+The existing dir is research-active. Plan must not break it.
+
+1. **New repo lives at `Science/QuantiPy-Polarity/`** — sibling to `Hughes Lab/`, independent git repo.
+2. **Copy + refactor, do not move.** Source dir stays intact. If something breaks during refactor, the original still runs.
+3. **Refactor in batches via subagents** (per global CLAUDE.md mandate). Each subpackage = one subagent task: `io/`, `segment/`, `polarity/`, `migration/`, `viz/`, `report/`, `interactive/`, `analyses/`, `validation/`, plus CLI batch and tests batch.
+4. **Strip optoCelsr-specific naming** as files move. Concretely: hard-coded `C10`/`D11` clone identifiers become user-supplied condition labels (read from config or directory names); `FOV_NN` stays as generic numbering; `Celsr1`/`optoCelsr` references in docstrings and variable names become "polarity marker" / "membrane channel"; magic channel indices (e.g., `img[..., 1]`) read from `input.channel_membrane` / `input.channel_segmentation`. Search for and remove every occurrence of `C10`, `D11`, `optoCelsr`, `Celsr1`, `Sachin`, `hPGK`, `pGK` outside of `examples/configs/celsr_optoclones.yaml` (which intentionally documents the original analysis).
+5. **Tests must pass on new repo before pushing to GitHub.** Cut v0.1.0 tag once green. Upload demo + validation parquet to the Release.
+6. **Original Hughes-Lab dir untouched.** Optionally later: one-line `README.md` there pointing to QuantiPy-Polarity. Not part of this plan.
+
+## 16. Module-level lift table
+
+| New module | Lifted from | Notes |
+|---|---|---|
+| `io/nd2.py` | `01_nd2_to_tif.py` | Strip optoCelsr naming; channel indices from config |
+| `io/tif.py` | new | Multi-page TIF ingest via `tifffile`; normalize to per-FOV TIFs |
+| `io/masks.py` | new | User-supplied label masks (uint16); validate against membrane TIFs |
+| `segment/cellpose.py` | `02_segment.py` | Wrap cellpose-SAM; pass model+diameter via config |
+| `segment/postprocess.py` | `03b_fix_undersegmented.py` | Skeleton-based merged-cell splitter |
+| `polarity/boundary_pca.py` | `04b_polarity_python.py` + `lib/qp/*` | Python QP reimplementation, generalized |
+| `polarity/per_cell.py` | `05_aggregate.py` | Per-FOV → experiment parquet |
+| `migration/front.py` | `recompute_migration_v3.py` + `compute_migration_field` | v6 real-bg classification, configurable erosion |
+| `migration/tune.py` | new (informed by `audit_front_detection.py`) | Interactive front-param tuner |
+| `migration/local.py` | `compute_48h_local_migration.py` | Per-cell local migration direction |
+| `viz/style.py` | `Science/styles/figstyle.py` + lab figure-standards | Nature palette baked in; no external dep on Science/styles |
+| `viz/polarity_map.py` | `plot_fov_polarity_panel.py` | Per-FOV vector overlay |
+| `viz/rose.py` | `plot_rose_per_fov.py` + `plot_rose_pair_halfdisk.py` | Rose / half-disk plots |
+| `viz/overlay.py` | `plot_fov_with_rose_localmig.py` | Combined FOV + rose + migration overlay |
+| `report/html.py` | new (Jinja2) | Self-contained HTML; base64-inlined figures |
+| `interactive/viewer.py` | `debug_polarity.py` | Matplotlib viewer; FOV dropdown, nav, click-cell inspection |
+| `analyses/per_fov_rose.py` | `plot_rose_per_fov.py` | Rose plot grid |
+| `analyses/polarity_heatmap.py` | `plot_continuous_polarity_heatmaps.py` | Continuous polarity heatmap |
+| `analyses/ar_stratified_rose.py` | `plot_ar_stratified_rose.py` | AR-stratified rose plots |
+| `analyses/axis_alignment.py` | `compare_axis_polarity_alignment.py` | Cell-axis vs polarity-axis alignment |
+| `analyses/magnitude_vs_distance.py` | `plot_magnitude_vs_distance.py` | Magnitude vs distance to front |
+| `analyses/polarization_decline.py` | `plot_polarization_decline.py` | Polarization vs depth band |
+| `validation/linear_relationship.py` | `compute_core_values_py_vs_qp.py` + `compute_correlation_v2.py` | QP-vs-Python scatter, linear fit, R², 95% CI |
+
+## 17. Open items deferred to the implementation plan
+
+These are intentionally not resolved here; the writing-plans pass will decide:
+- **Author name string** in `pyproject.toml` and `CITATION.cff` — currently `<full name TBD>`; needs user input before push.
+- Exact dependency-version pins (currently lower bounds only).
+- Whether `quantipy debug` and `quantipy front --interactive` share a base class or remain separate.
+- Whether `release.yml` is a manual trigger or fires on tag push.
+- Specific tolerance thresholds for `test_polarity.py`'s synthetic-recovery assertion.
+- Whether `analyses/` exposes a Python plugin entry-point group (for third-party analyses), or stays internal-only for v0.1.0.
+- Exact filename and FOV identity of the demo data bundled into the v0.1.0 Release (currently noted as "likely C10/FOV_04" — final selection at refactor time after eyeballing quality).
+
+## 18. Acceptance criteria for v0.1.0 release
+
+- `pip install git+https://github.com/mcleanT/QuantiPy-Polarity.git` succeeds in a clean Python 3.11 environment.
+- `quantipy download-demo && quantipy run --input <demo> --output ./results` produces all four output classes (maps, rose plots, tables, migration overlays) and a working `report.html`.
+- `pytest tests/` is green on macOS and Ubuntu in CI.
+- `quantipy validate` regenerates the linear-relationship figure matching the docs/validation.md figure.
+- README quickstart works as written for a first-time user with only Python + pip installed.
+- `.claude/commands/quantipy-run.md` invocable as `/quantipy-run` from a Claude-Code session opened in a clone of the repo.
+
+ succeeded in 231ms:
+CLAUDE.md:3:Reimplementation + validation of the QP (QuantifyPolarity) PCA Cell-by-Cell
+CLAUDE.md:4:polarity pipeline in Python, plus migration-front analysis on optoCelsr
+CLAUDE.md:5:clones C10 and D11 (25-hour live migration).
+CLAUDE.md:7:## Environment
+CLAUDE.md:10:conda activate optocelsr-polarity         # python=3.11, cellpose-SAM, nd2reader, etc.
+CLAUDE.md:14:`pipeline/environment.yml` is the source of truth. Tests: `pytest pipeline/tests/`.
+CLAUDE.md:16:## Directory layout
+CLAUDE.md:20:QuantifyPolarity.2022.2.1.Mac.zip                 # vendored QP (run via stage 04)
+CLAUDE.md:24:  ├── 02_segment.py           Stage 2   Cellpose-SAM segmentation + QC
+CLAUDE.md:25:  ├── 03_build_qp_input.py    Stage 3   assemble QP's expected input folder
+CLAUDE.md:27:  ├── 04_run_qp.py            Stage 4   subprocess QP (probe + acceptance gate)
+CLAUDE.md:32:  ├── recompute_migration_v{2,3}.py     migration-front recomputes
+CLAUDE.md:34:  ├── lib/                    shared modules (io, qp, axial, segmentation, …)
+CLAUDE.md:35:  └── tests/                  pytest suite, one test_*.py per lib module
+CLAUDE.md:39:  ├── 03_quantifypolarity_input/   Stage 3 — QP-shaped layout; also holds QP's
+CLAUDE.md:44:  └── 07_comparison/          QP-vs-Python correlation parquets + figures
+CLAUDE.md:46:qp_validation/                # standalone QP acceptance test
+CLAUDE.md:56:## Key configs
+CLAUDE.md:58:`pipeline/config.yaml` is a placeholder for tests. Real runs use one of:
+CLAUDE.md:59:- `pipeline/config_mip.yaml` — MIP z-policy (primary; outputs → `derived_mip/`)
+CLAUDE.md:60:- `pipeline/config_substack.yaml` — substack z-policy (→ `derived_substack/`)
+CLAUDE.md:62:Pass via `--config` to any stage script.
+CLAUDE.md:64:## Interactive per-cell viewer
+CLAUDE.md:70:+ data-source freshness notes are in the module docstring at top of
+CLAUDE.md:74:the migration front + green arrows are recomputed live via
+CLAUDE.md:75:`compute_migration_field` (v6 real-bg classification — handles fragmented
+CLAUDE.md:76:open regions correctly, kills thin-sliver corner artifacts via erosion);
+CLAUDE.md:77:the per-cell QP/Py axes are loaded from `derived_mip/07_comparison/per_cell.parquet`
+CLAUDE.md:81:## Comparison parquets (cheat sheet)
+CLAUDE.md:85:| `per_cell.parquet` | 94k | Original QP-vs-Python comparison; default viewer source |
+CLAUDE.md:87:| `per_cell_v2_oldfront.parquet` | 114k | Same shape, kept as old-front baseline |
+CLAUDE.md:89:| `per_cell_migration.parquet` | 84k | Earlier migration-only table; superseded |
+CLAUDE.md:92:Algorithm provenance for the live migration field is in the docstring of
+CLAUDE.md:93:`compute_migration_field` (`pipeline/debug_polarity.py`).
+CLAUDE.md:95:## Conventions inherited from upstream
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:11:## 1. Purpose
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:13:Package the existing Python reimplementation of QuantifyPolarity (QP) — currently developed in `Hughes Lab/Sachin/Polarity Quantification/` — as a standalone public repository: **QuantiPy Polarity**.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:15:The single-shot promise: a user feeds in raw microscopy images and receives per-FOV polarity maps, rose plots, quantitative tables, migration-front overlays, and a self-contained HTML report — without needing to install the original QP `.app` binary or understand the staged-pipeline internals.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:17:## 2. Goals and non-goals
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:20:- One CLI command (`quantipy run`) takes raw images to all outputs.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:21:- Fully marker-agnostic — works for any planar polarity marker (Vangl, Frizzled, Celsr1, Crumbs, etc.) via config.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:23:- Python implementation only — no vendored QP binary.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:25:- Ship validation evidence (QP-vs-Python linear-relationship figure) so reviewers can verify equivalence.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:26:- MIT license, single-author authorship.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:30:- Vendor the QP `.app` binary (cite the original tool instead).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:35:## 3. Scope decisions (resolved during brainstorming)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:40:| Entry point | CLI-first (`quantipy ...`), Python API exists for free via clean package layout but is not heavily advertised |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:42:| Generality | Fully generic — channel indices and markers configurable via YAML |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:43:| Outputs | Per-FOV polarity maps + rose plots + quantitative tables + migration overlays + HTML report |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:44:| QP binary | Python-only; drop vendored `.app`; cite original QP paper |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:49:| Packaging | Approach A — clean `src/` Python package layout, CLI documented as primary entry |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:50:| Validation | Dedicated `validation/` subpackage shipping the QP-vs-Python linear-relationship figure as static evidence |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:52:## 4. Repository layout
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:60:├── pyproject.toml                    # Build, deps, console_scripts entry
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:61:├── environment.yml                   # Conda alternative for users who need it
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:68:│       └── quantipy-front-tune.md
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:71:│   └── release.yml                   # Upload demo + validation assets to Releases
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:76:│       ├── config.py                 # Pydantic schema + YAML loader
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:82:│       │   ├── cellpose.py
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:87:│       ├── migration/
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:88:│       │   ├── front.py              # Automated (v3 outward-side)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:90:│       │   └── local.py              # Per-cell local migration direction
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:99:│       ├── interactive/
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:100:│       │   └── viewer.py             # debug_polarity refactor
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:109:│       └── validation/
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:110:│           ├── linear_relationship.py    # Regenerates QP-vs-Python scatter
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:111:│           └── README.md                 # Provenance, sample sizes, QP version
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:117:│   ├── test_config.py
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:121:│   ├── test_front.py
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:129:│   └── configs/
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:136:    ├── config-reference.md
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:138:    ├── interactive-viewer.md
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:139:    ├── migration-front.md
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:140:    ├── validation.md
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:147:- Subpackages organized by **concern** (`io/`, `segment/`, `polarity/`, ...) rather than stage number. Pipeline ordering is defined in `cli.py`, not in directory names. Python module names cannot begin with digits, so this is also a hard requirement for the Python API to exist at all.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:148:- `analyses/` and `validation/` are peers to the core modules — `analyses/` is the "curated analyses" bucket from the scope decision; `validation/` is the dedicated home for QP-vs-Python evidence.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:151:## 5. CLI surface
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:153:All commands installed via `pyproject.toml`'s `[project.scripts]` as `quantipy = "quantipy_polarity.cli:main"`.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:155:| Command | Wraps module | Purpose |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:159:| `quantipy segment` | `segment/` | Cellpose-SAM → label masks |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:161:| `quantipy front` | `migration/` | Migration front + local arrows; `--auto` or `--interactive` |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:165:| `quantipy debug` | `interactive/` | Interactive per-cell viewer |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:167:| `quantipy validate` | `validation/` | Regenerate QP-vs-Python linear-relationship figure |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:170:Every subcommand accepts `--config <path>`, `--input <path>`, `--output <path>`. `quantipy run` is the documented single-shot path; the others exist for redoing one stage without rerunning the full pipeline.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:179:Explicit override available via `input.source` in config (`nd2 | tif | masks`) for ambiguous directories.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:181:## 6. Configuration
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:183:Single YAML, Pydantic-validated, defaults baked in so a minimal config (just `input.path`) works.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:200:  model: cellpose-sam              # cellpose-sam | user_supplied
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:212:migration:
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:213:  detect_front: true
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:214:  front_method: v3_outward         # v3_outward | none
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:237:Each subcommand validates only the slice it needs (`quantipy plot` does not require `segment.diameter_px`). Config snapshot is written to `results/run_config.yaml` for reproducibility. `examples/configs/celsr_optoclones.yaml` ships as a real-world reference config (the actual one used for the optoCelsr analysis).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:239:## 7. Output layout
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:243:├── run_config.yaml                 # Resolved config snapshot
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:250:├── 04_migration/
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:251:│   ├── front_overlays/             # Front + arrows (PNG + PDF)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:252:│   └── per_cell_migration.parquet
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:266:1. Header: project name, timestamp, config hash, link to `per_cell.parquet`
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:267:2. Summary stats: N FOVs, N cells, median polarity magnitude, mean axis-vs-migration alignment, QC flag counts
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:270:5. Run config (expandable YAML block)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:275:## 8. Interactive viewers
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:285:- **Top bar:** FOV dropdown, ← → nav, colormap toggle, migration-front toggle.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:292:### `quantipy front --interactive` — front tuner
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:299:- `front_method` (`v3_outward` | `none`)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:301:Slider changes re-run `migration/front.compute()` on the cached segmentation (no resegmentation; sub-second updates). Buttons:
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:303:- **Save params** — write chosen values back to `config.migration.*`
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:304:- **Apply to all FOVs** — re-run `quantipy front --auto` with new params across experiment
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:306:Both viewers detect non-interactive matplotlib backends and print SSH hints instead of crashing.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:308:### Automated migration front
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:310:`quantipy front --auto` is the default path called by `quantipy run`. Lifts from `recompute_migration_v3.py` + `compute_migration_field` (v6 real-bg fragment classification, erosion to suppress thin-sliver corner artifacts). Algorithm provenance documented in `docs/migration-front.md`.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:312:## 9. Validation evidence
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:314:The QP-vs-Python correlation is first-class evidence for the public repo — reviewers should be able to verify equivalence without installing QP themselves.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:316:- `src/quantipy_polarity/validation/linear_relationship.py` regenerates the scatter (axis correlation + magnitude correlation, linear fit, R², 95% CI).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:317:- Comparison data lives in **GitHub Releases** as `validation_per_cell.parquet` (~few MB, lifted from `derived_mip/07_comparison/per_cell_v2.parquet`, ~114k cells C10+D11).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:318:- `quantipy validate` downloads on first call, caches to `~/.cache/quantipy/validation/`, regenerates the figure into the output dir.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:319:- `docs/validation.md` documents methodology, sample sizes, the exact QP version validated against (`QuantifyPolarity.2022.2.1.Mac`), and reported correlation coefficients.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:321:## 10. Claude-Code integration
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:325:Orients Claude-Code sessions opened in the repo:
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:327:- CLI command table (so Claude has the surface area)
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:328:- Where the config lives, demo-data invocation
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:355:| `/quantipy-run` | `quantipy run` | One-shot end-to-end. Scaffolds default config if none found; asks before launching. |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:357:| `/quantipy-front-tune` | `quantipy front --interactive` | Tune front params, save back to config. |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:359:Each command is a short markdown file with frontmatter; intentionally lightweight — convenience entry points, not autonomous agents.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:361:## 11. Distribution
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:363:### `pyproject.toml`
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:369:description = "Single-shot planar polarity quantification from raw microscopy images"
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:371:license = {text = "MIT"}
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:381:  "cellpose>=3.0",
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:411:3. Conda: `conda env create -f environment.yml && conda activate quantipy && pip install -e .`
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:417:SemVer. v0.1.0 = first public release. GitHub Releases cut from tags. `release.yml` uploads demo + validation parquet assets per tagged release. `quantipy --version` reads from `importlib.metadata`.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:419:## 12. Sample data
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:440:open ./results/report.html
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:443:## 13. Testing + CI
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:446:- Per-module tests: `test_io.py`, `test_segment.py`, `test_polarity.py`, `test_front.py`, `test_viz.py`, `test_cli.py`, `test_config.py`.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:448:- `ci.yml`: pytest on Python 3.11 + 3.12, Ubuntu + macOS. Cellpose-SAM weights cached between runs.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:449:- No GPU in CI — synthetic input is small enough for CPU cellpose in seconds.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:451:## 14. Documentation
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:456:| `docs/concepts.md` | New-to-QP biologist | Planar polarity primer; what boundary-PCA measures |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:459:| `docs/config-reference.md` | Anyone writing a config | Field-by-field reference, defaults, examples |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:461:| `docs/interactive-viewer.md` | Debug viewer user | Screenshots, keybindings, workflows |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:462:| `docs/migration-front.md` | Migration analyst | Algorithm provenance, tuning guide |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:463:| `docs/validation.md` | Reviewer / sceptic | QP-vs-Python methodology, scatter, sample sizes, QP version |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:464:| `docs/citing.md` | Citing user | BibTeX, CITATION.cff pointer, original QP paper link |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:468:## 15. Carve-out plan from `Hughes Lab/Sachin/Polarity Quantification/`
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:473:2. **Copy + refactor, do not move.** Source dir stays intact. If something breaks during refactor, the original still runs.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:474:3. **Refactor in batches via subagents** (per global CLAUDE.md mandate). Each subpackage = one subagent task: `io/`, `segment/`, `polarity/`, `migration/`, `viz/`, `report/`, `interactive/`, `analyses/`, `validation/`, plus CLI batch and tests batch.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:475:4. **Strip optoCelsr-specific naming** as files move. Concretely: hard-coded `C10`/`D11` clone identifiers become user-supplied condition labels (read from config or directory names); `FOV_NN` stays as generic numbering; `Celsr1`/`optoCelsr` references in docstrings and variable names become "polarity marker" / "membrane channel"; magic channel indices (e.g., `img[..., 1]`) read from `input.channel_membrane` / `input.channel_segmentation`. Search for and remove every occurrence of `C10`, `D11`, `optoCelsr`, `Celsr1`, `Sachin`, `hPGK`, `pGK` outside of `examples/configs/celsr_optoclones.yaml` (which intentionally documents the original analysis).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:476:5. **Tests must pass on new repo before pushing to GitHub.** Cut v0.1.0 tag once green. Upload demo + validation parquet to the Release.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:479:## 16. Module-level lift table
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:481:| New module | Lifted from | Notes |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:483:| `io/nd2.py` | `01_nd2_to_tif.py` | Strip optoCelsr naming; channel indices from config |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:486:| `segment/cellpose.py` | `02_segment.py` | Wrap cellpose-SAM; pass model+diameter via config |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:488:| `polarity/boundary_pca.py` | `04b_polarity_python.py` + `lib/qp/*` | Python QP reimplementation, generalized |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:490:| `migration/front.py` | `recompute_migration_v3.py` + `compute_migration_field` | v6 real-bg classification, configurable erosion |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:491:| `migration/tune.py` | new (informed by `audit_front_detection.py`) | Interactive front-param tuner |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:492:| `migration/local.py` | `compute_48h_local_migration.py` | Per-cell local migration direction |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:496:| `viz/overlay.py` | `plot_fov_with_rose_localmig.py` | Combined FOV + rose + migration overlay |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:498:| `interactive/viewer.py` | `debug_polarity.py` | Matplotlib viewer; FOV dropdown, nav, click-cell inspection |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:503:| `analyses/magnitude_vs_distance.py` | `plot_magnitude_vs_distance.py` | Magnitude vs distance to front |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:505:| `validation/linear_relationship.py` | `compute_core_values_py_vs_qp.py` + `compute_correlation_v2.py` | QP-vs-Python scatter, linear fit, R², 95% CI |
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:507:## 17. Open items deferred to the implementation plan
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:510:- **Author name string** in `pyproject.toml` and `CITATION.cff` — currently `<full name TBD>`; needs user input before push.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:512:- Whether `quantipy debug` and `quantipy front --interactive` share a base class or remain separate.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:516:- Exact filename and FOV identity of the demo data bundled into the v0.1.0 Release (currently noted as "likely C10/FOV_04" — final selection at refactor time after eyeballing quality).
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:518:## 18. Acceptance criteria for v0.1.0 release
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:520:- `pip install git+https://github.com/mcleanT/QuantiPy-Polarity.git` succeeds in a clean Python 3.11 environment.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:521:- `quantipy download-demo && quantipy run --input <demo> --output ./results` produces all four output classes (maps, rose plots, tables, migration overlays) and a working `report.html`.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:523:- `quantipy validate` regenerates the linear-relationship figure matching the docs/validation.md figure.
+docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md:525:- `.claude/commands/quantipy-run.md` invocable as `/quantipy-run` from a Claude-Code session opened in a clone of the repo.
+
+codex
+## Summary Verdict
+**Revise-and-proceed.** The spec has the right center of gravity: CLI-first, reproducible outputs, real validation evidence, and a clean `src/` package are appropriate for a public carve-out. But v0.1.0 is over-scoped around segmentation, interactive tooling, analyses, and “fully generic” claims. The release should narrow its promise to a robust core path plus documented escape hatches, otherwise the first public users will hit installation, input-format, or algorithm-assumption failures before they ever evaluate the polarity method.
+
+## Specific Issues
+
+1. **§2/§3 Generality claim: “fully marker-agnostic” is too strong.**  
+   Channel configurability does not make the algorithm biologically generic. Boundary-PCA assumes membrane-localized planar polarity signal, segmentable cell boundaries, and an interpretable axial orientation; migration-front analysis assumes collective migration geometry.  
+   **Fix:** Reword to “channel-configurable for membrane-associated planar-polarity markers” and explicitly document unsupported cases: diffuse cytoplasmic markers, puncta-only markers, apical-basal polarity, sparse/non-confluent cells, non-front migration.
+
+2. **§18 Quickstart acceptance is unrealistic with Cellpose-SAM and ND2.**  
+   “First-time user with only Python + pip” is likely false because Cellpose, model weights, torch backend behavior, ND2 reading, and macOS/Linux binary dependencies are fragile.  
+   **Fix:** Make the quickstart use pre-segmented masks or a small TIF demo by default; make raw ND2 + Cellpose-SAM a second-path “full pipeline” quickstart with environment checks.
+
+3. **§5 CLI surface is too broad for a biologist-facing v0.1.0.**  
+   `quantipy run` plus 11 subcommands makes the tool look like a framework, not a simple pipeline. Most users need run, inspect/report, validate, and maybe resume one failed stage.  
+   **Fix:** Publicly document only `run`, `download-demo`, `validate`, and `debug`; hide or mark stage commands as “advanced/resume/debug” in CLI help and docs.
+
+4. **§8 Interactive viewers are the most likely public-facing failure point.**  
+   Matplotlib GUI behavior varies across backends, SSH, notebooks, macOS, and headless Linux; writing config from a GUI also risks silent reproducibility drift.  
+   **Fix:** Keep `quantipy debug` read-only for v0.1.0, defer `front --interactive`, or make the tuner output a proposed YAML patch rather than mutating config. Prefer static QC overlays plus CLI parameter rerun before adding a richer GUI.
+
+5. **§6 Single YAML is right, but the current schema hides mode-specific requirements.**  
+   A minimal config with only `input.path` cannot reliably work across ND2, TIF, and mask inputs because channel semantics, pixel size, z-policy, FOV naming, and mask pairing are experiment-specific.  
+   **Fix:** Keep one YAML, but define explicit profiles/modes: `raw_nd2`, `tif_stack`, `masks`. Provide `quantipy init-config --mode masks|tif|nd2` rather than pretending defaults are enough.
+
+6. **§11 Lower-bound dependency pins are a release-risk multiplier.**  
+   Scientific Python plus Cellpose plus image IO will break under future major versions. Lower bounds only are not kindness to users; they are deferred failure.  
+   **Fix:** Use tested upper bounds or a constraints file for v0.1.0, plus `environment.yml` as the recommended reproducible install path. Relax later only after CI proves newer versions.
+
+7. **§9 Validation story is credible but incomplete for referees.**  
+   A QP-vs-Python parquet and scatter are useful, but without QP itself reviewers can only verify regeneration of the figure, not independent equivalence from raw inputs.  
+   **Fix:** Be precise: “reproduces the shipped comparison analysis,” not “verify equivalence.” Ship provenance hashes, exact QP output columns used, source script lineage, and one frozen raw/reference mini-case if license/privacy allows.
+
+8. **§15 Copy + refactor protects the research dir but creates divergence immediately.**  
+   Once copied, bug fixes in the research pipeline and public package can fork silently, especially in the boundary-PCA and migration-front code.  
+   **Fix:** After carve-out, designate the public package as upstream for reusable algorithms. The research repo should import or vendor a tagged public version, not keep evolving parallel core logic.
+
+9. **§16 Module lift table under-specifies data contracts.**  
+   It says where code comes from, but not what each module consumes/emits, which columns are stable, what coordinate conventions apply, or how axial angles are represented.  
+   **Fix:** Add per-module contracts: input arrays, label conventions, angle units/ranges, per-cell schema, QC flags, FOV identifiers, pixel/micron handling, and migration-vector conventions.
+
+10. **§4 `analyses/` is premature as a peer package.**  
+   The listed analyses are mostly optoCelsr paper workflows, not core package behavior. Putting them beside `io`, `segment`, and `polarity` makes v0.1.0 look broader and more maintained than it is.  
+   **Fix:** Move curated analyses to `examples/analyses/` or `quantipy_polarity/experimental/` until at least two external datasets justify stable APIs.
+
+11. **§7 Output layout lacks failure/resume semantics.**  
+   Numbered directories are good, but the spec does not define atomic writes, partial runs, overwrite behavior, or how a user resumes after segmentation succeeds and polarity fails.  
+   **Fix:** Add `--resume`, `--force`, stage status metadata, and write-then-rename behavior for parquet/HTML outputs.
+
+12. **§12 Demo data may create licensing/privacy/reproducibility exposure.**  
+   A real FOV from an unpublished or lab-owned dataset in GitHub Releases needs explicit permission and metadata stripping.  
+   **Fix:** Decide ownership and redistribution rights before implementation; otherwise ship synthetic plus a derived/de-identified TIF/mask bundle.
+
+13. **§10 Claude-Code integration is over-prominent for a public scientific repo.**  
+   It is useful for the author, but reviewers and biologists may read it as tool-specific clutter or as implying Claude is required.  
+   **Fix:** Keep the files, but make README independent and put Claude integration under a short “Developer workflow” section, not a headline feature.
+
+14. **§13 CI assumptions are optimistic.**  
+   “CPU cellpose in seconds” on synthetic data is not a safe CI premise across macOS and Ubuntu, especially with model downloads.  
+   **Fix:** Separate algorithmic CI from segmentation smoke tests. Use precomputed masks for e2e CI; run Cellpose tests as optional/nightly or allow them to skip when weights/backend are unavailable.
+
+## Things The Spec Does Well
+
+The core package layout is broadly sound: concern-based modules, `src/` layout, config validation, reproducible output snapshots, and a one-shot CLI are all worth preserving. The output directory is understandable and publication-friendly. Shipping synthetic fixtures plus validation artifacts is the right instinct. Dropping the vendored QP binary is also correct, as long as the validation claim is narrowed.
+
+## Recommended Revisions Before Writing-Plans
+
+1. Narrow the v0.1.0 promise: core polarity quantification from TIF/masks, raw ND2 + Cellpose as supported but not the only quickstart path.
+
+2. Replace “fully marker-agnostic” with an assumptions-and-validity section that names biological and image-processing limits.
+
+3. Collapse public CLI docs around `run`, `download-demo`, `validate`, and `debug`; mark all stage commands advanced.
+
+4. Defer or reduce the interactive front tuner; keep front detection automatic plus reproducible static QC overlays.
+
+5. Add formal data contracts for module boundaries and output parquet schemas before refactoring.
+
+6. Add tested dependency constraints and make conda/environment install the recommended scientific path.
+
+7. Make validation provenance stronger: hashes, QP version, source columns, frozen figure generation, and careful wording about what users can verify.
+
+8. Move `analyses/` out of the stable core namespace or label it experimental.
+
+9. Define resume/overwrite/failure behavior for every stage.
+
+10. Resolve demo-data redistribution rights before uploading any real lab asset.
+tokens used
+41,391
+## Summary Verdict
+**Revise-and-proceed.** The spec has the right center of gravity: CLI-first, reproducible outputs, real validation evidence, and a clean `src/` package are appropriate for a public carve-out. But v0.1.0 is over-scoped around segmentation, interactive tooling, analyses, and “fully generic” claims. The release should narrow its promise to a robust core path plus documented escape hatches, otherwise the first public users will hit installation, input-format, or algorithm-assumption failures before they ever evaluate the polarity method.
+
+## Specific Issues
+
+1. **§2/§3 Generality claim: “fully marker-agnostic” is too strong.**  
+   Channel configurability does not make the algorithm biologically generic. Boundary-PCA assumes membrane-localized planar polarity signal, segmentable cell boundaries, and an interpretable axial orientation; migration-front analysis assumes collective migration geometry.  
+   **Fix:** Reword to “channel-configurable for membrane-associated planar-polarity markers” and explicitly document unsupported cases: diffuse cytoplasmic markers, puncta-only markers, apical-basal polarity, sparse/non-confluent cells, non-front migration.
+
+2. **§18 Quickstart acceptance is unrealistic with Cellpose-SAM and ND2.**  
+   “First-time user with only Python + pip” is likely false because Cellpose, model weights, torch backend behavior, ND2 reading, and macOS/Linux binary dependencies are fragile.  
+   **Fix:** Make the quickstart use pre-segmented masks or a small TIF demo by default; make raw ND2 + Cellpose-SAM a second-path “full pipeline” quickstart with environment checks.
+
+3. **§5 CLI surface is too broad for a biologist-facing v0.1.0.**  
+   `quantipy run` plus 11 subcommands makes the tool look like a framework, not a simple pipeline. Most users need run, inspect/report, validate, and maybe resume one failed stage.  
+   **Fix:** Publicly document only `run`, `download-demo`, `validate`, and `debug`; hide or mark stage commands as “advanced/resume/debug” in CLI help and docs.
+
+4. **§8 Interactive viewers are the most likely public-facing failure point.**  
+   Matplotlib GUI behavior varies across backends, SSH, notebooks, macOS, and headless Linux; writing config from a GUI also risks silent reproducibility drift.  
+   **Fix:** Keep `quantipy debug` read-only for v0.1.0, defer `front --interactive`, or make the tuner output a proposed YAML patch rather than mutating config. Prefer static QC overlays plus CLI parameter rerun before adding a richer GUI.
+
+5. **§6 Single YAML is right, but the current schema hides mode-specific requirements.**  
+   A minimal config with only `input.path` cannot reliably work across ND2, TIF, and mask inputs because channel semantics, pixel size, z-policy, FOV naming, and mask pairing are experiment-specific.  
+   **Fix:** Keep one YAML, but define explicit profiles/modes: `raw_nd2`, `tif_stack`, `masks`. Provide `quantipy init-config --mode masks|tif|nd2` rather than pretending defaults are enough.
+
+6. **§11 Lower-bound dependency pins are a release-risk multiplier.**  
+   Scientific Python plus Cellpose plus image IO will break under future major versions. Lower bounds only are not kindness to users; they are deferred failure.  
+   **Fix:** Use tested upper bounds or a constraints file for v0.1.0, plus `environment.yml` as the recommended reproducible install path. Relax later only after CI proves newer versions.
+
+7. **§9 Validation story is credible but incomplete for referees.**  
+   A QP-vs-Python parquet and scatter are useful, but without QP itself reviewers can only verify regeneration of the figure, not independent equivalence from raw inputs.  
+   **Fix:** Be precise: “reproduces the shipped comparison analysis,” not “verify equivalence.” Ship provenance hashes, exact QP output columns used, source script lineage, and one frozen raw/reference mini-case if license/privacy allows.
+
+8. **§15 Copy + refactor protects the research dir but creates divergence immediately.**  
+   Once copied, bug fixes in the research pipeline and public package can fork silently, especially in the boundary-PCA and migration-front code.  
+   **Fix:** After carve-out, designate the public package as upstream for reusable algorithms. The research repo should import or vendor a tagged public version, not keep evolving parallel core logic.
+
+9. **§16 Module lift table under-specifies data contracts.**  
+   It says where code comes from, but not what each module consumes/emits, which columns are stable, what coordinate conventions apply, or how axial angles are represented.  
+   **Fix:** Add per-module contracts: input arrays, label conventions, angle units/ranges, per-cell schema, QC flags, FOV identifiers, pixel/micron handling, and migration-vector conventions.
+
+10. **§4 `analyses/` is premature as a peer package.**  
+   The listed analyses are mostly optoCelsr paper workflows, not core package behavior. Putting them beside `io`, `segment`, and `polarity` makes v0.1.0 look broader and more maintained than it is.  
+   **Fix:** Move curated analyses to `examples/analyses/` or `quantipy_polarity/experimental/` until at least two external datasets justify stable APIs.
+
+11. **§7 Output layout lacks failure/resume semantics.**  
+   Numbered directories are good, but the spec does not define atomic writes, partial runs, overwrite behavior, or how a user resumes after segmentation succeeds and polarity fails.  
+   **Fix:** Add `--resume`, `--force`, stage status metadata, and write-then-rename behavior for parquet/HTML outputs.
+
+12. **§12 Demo data may create licensing/privacy/reproducibility exposure.**  
+   A real FOV from an unpublished or lab-owned dataset in GitHub Releases needs explicit permission and metadata stripping.  
+   **Fix:** Decide ownership and redistribution rights before implementation; otherwise ship synthetic plus a derived/de-identified TIF/mask bundle.
+
+13. **§10 Claude-Code integration is over-prominent for a public scientific repo.**  
+   It is useful for the author, but reviewers and biologists may read it as tool-specific clutter or as implying Claude is required.  
+   **Fix:** Keep the files, but make README independent and put Claude integration under a short “Developer workflow” section, not a headline feature.
+
+14. **§13 CI assumptions are optimistic.**  
+   “CPU cellpose in seconds” on synthetic data is not a safe CI premise across macOS and Ubuntu, especially with model downloads.  
+   **Fix:** Separate algorithmic CI from segmentation smoke tests. Use precomputed masks for e2e CI; run Cellpose tests as optional/nightly or allow them to skip when weights/backend are unavailable.
+
+## Things The Spec Does Well
+
+The core package layout is broadly sound: concern-based modules, `src/` layout, config validation, reproducible output snapshots, and a one-shot CLI are all worth preserving. The output directory is understandable and publication-friendly. Shipping synthetic fixtures plus validation artifacts is the right instinct. Dropping the vendored QP binary is also correct, as long as the validation claim is narrowed.
+
+## Recommended Revisions Before Writing-Plans
+
+1. Narrow the v0.1.0 promise: core polarity quantification from TIF/masks, raw ND2 + Cellpose as supported but not the only quickstart path.
+
+2. Replace “fully marker-agnostic” with an assumptions-and-validity section that names biological and image-processing limits.
+
+3. Collapse public CLI docs around `run`, `download-demo`, `validate`, and `debug`; mark all stage commands advanced.
+
+4. Defer or reduce the interactive front tuner; keep front detection automatic plus reproducible static QC overlays.
+
+5. Add formal data contracts for module boundaries and output parquet schemas before refactoring.
+
+6. Add tested dependency constraints and make conda/environment install the recommended scientific path.
+
+7. Make validation provenance stronger: hashes, QP version, source columns, frozen figure generation, and careful wording about what users can verify.
+
+8. Move `analyses/` out of the stable core namespace or label it experimental.
+
+9. Define resume/overwrite/failure behavior for every stage.
+
+10. Resolve demo-data redistribution rights before uploading any real lab asset.
