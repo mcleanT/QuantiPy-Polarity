@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use QuantiPy Polarity in your research, please cite it as below."
+type: software
+title: "QuantiPy Polarity"
+abstract: >
+  A Python implementation of the QuantifyPolarity (QP) planar polarity
+  quantification pipeline. Computes per-cell polarity axes from
+  membrane-channel microscopy images using boundary PCA, detects migration
+  fronts, and generates polarity maps, rose plots, and a self-contained HTML
+  report.
+authors:
+  - family-names: McLean
+    given-names: Taggart
+    email: taggartmc@pennmedicine.upenn.edu
+repository-code: "https://github.com/mcleanT/QuantiPy-Polarity"
+license: MIT
+version: "0.1.0"
+date-released: "2026-05-26"
+keywords:
+  - planar-polarity
+  - cell-biology
+  - microscopy
+  - image-analysis
+  - python
+references:
+  - type: software
+    title: "QuantifyPolarity"
+    abstract: >
+      Original Mathematica implementation of the boundary-PCA polarity
+      quantification algorithm that QuantiPy Polarity reimplements in Python.
+    authors:
+      - name: "Hughes Lab"
+    notes: "QuantifyPolarity.2022.2.1.Mac — the original tool that this package re-implements."
