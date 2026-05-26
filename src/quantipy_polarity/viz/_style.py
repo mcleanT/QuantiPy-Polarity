@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive; caller can override before importing
 import matplotlib.pyplot as plt
 
@@ -29,6 +30,7 @@ _MONOREPO_STYLES = Path(__file__).resolve().parents[6] / "styles" / "figstyle.py
 
 if _MONOREPO_STYLES.exists():
     import importlib.util as _ilu
+
     _spec = _ilu.spec_from_file_location("_lab_figstyle", _MONOREPO_STYLES)
     if _spec and _spec.loader:
         _lab = _ilu.module_from_spec(_spec)
@@ -41,45 +43,45 @@ if _MONOREPO_STYLES.exists():
 
 # ── Palette (identical to Science/styles/figstyle.py PALETTE) ─────────────────
 PALETTE: dict[str, str] = {
-    "phase1":     "#5B8FD6",
-    "phase2":     "#E28E2C",
-    "phase3":     "#7BAA5B",
-    "phase4":     "#C45AD6",
-    "failure":    "#D24B40",
-    "composite":  "#272727",
+    "phase1": "#5B8FD6",
+    "phase2": "#E28E2C",
+    "phase3": "#7BAA5B",
+    "phase4": "#C45AD6",
+    "failure": "#D24B40",
+    "composite": "#272727",
     "neutral_bg": "#F2E6D9",
-    "cat5":       "#E69F00",
-    "cat6":       "#56B4E9",
-    "cat7":       "#5DA88F",
+    "cat5": "#E69F00",
+    "cat6": "#56B4E9",
+    "cat7": "#5DA88F",
 }
 
 # Semantic aliases used by Phase 4 figures
-COLOR_POLARITY = PALETTE["phase1"]   # arrows coloured by magnitude default
-COLOR_FRONT    = PALETTE["phase2"]   # front overlay line
-COLOR_CELL     = PALETTE["composite"]  # cell outlines
-COLOR_FAILURE  = PALETTE["failure"]
+COLOR_POLARITY = PALETTE["phase1"]  # arrows coloured by magnitude default
+COLOR_FRONT = PALETTE["phase2"]  # front overlay line
+COLOR_CELL = PALETTE["composite"]  # cell outlines
+COLOR_FAILURE = PALETTE["failure"]
 
 
 # ── rcParams (baked-in fallback, matches Science/styles/figstyle.py) ──────────
 _RCPARAMS: dict[str, Any] = {
-    "font.family":       "Arial",
-    "font.size":          7,
-    "axes.titlesize":     8,
-    "axes.titleweight":   "bold",
-    "axes.labelsize":     7,
-    "xtick.labelsize":    6,
-    "ytick.labelsize":    6,
-    "axes.linewidth":     0.5,
-    "xtick.major.width":  0.5,
-    "ytick.major.width":  0.5,
-    "lines.linewidth":    0.8,
-    "patch.linewidth":    0.5,
-    "legend.fontsize":    6,
-    "legend.frameon":     False,
-    "pdf.fonttype":       42,
-    "svg.fonttype":       "none",
-    "axes.spines.top":    False,
-    "axes.spines.right":  False,
+    "font.family": "Arial",
+    "font.size": 7,
+    "axes.titlesize": 8,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 7,
+    "xtick.labelsize": 6,
+    "ytick.labelsize": 6,
+    "axes.linewidth": 0.5,
+    "xtick.major.width": 0.5,
+    "ytick.major.width": 0.5,
+    "lines.linewidth": 0.8,
+    "patch.linewidth": 0.5,
+    "legend.fontsize": 6,
+    "legend.frameon": False,
+    "pdf.fonttype": 42,
+    "svg.fonttype": "none",
+    "axes.spines.top": False,
+    "axes.spines.right": False,
 }
 
 

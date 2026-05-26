@@ -49,12 +49,18 @@ def test_front_writes_parquet() -> None:
         _write_seg_dir(tmp, n_fovs=2, size=64)
         cfg = _write_config(tmp)
         out = tmp / "results"
-        result = runner.invoke(main, [
-            "front",
-            "--config", str(cfg),
-            "--input", str(tmp),
-            "--output", str(out),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "front",
+                "--config",
+                str(cfg),
+                "--input",
+                str(tmp),
+                "--output",
+                str(out),
+            ],
+        )
         assert result.exit_code == 0, result.output
         parquet = out / "04_migration" / "front_um_per_fov.parquet"
         assert parquet.exists()
@@ -71,10 +77,19 @@ def test_front_qc_flag_writes_overlay_pngs() -> None:
         _write_seg_dir(tmp, n_fovs=1, size=64)
         cfg = _write_config(tmp)
         out = tmp / "results"
-        result = runner.invoke(main, [
-            "front", "--config", str(cfg),
-            "--input", str(tmp), "--output", str(out), "--qc",
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "front",
+                "--config",
+                str(cfg),
+                "--input",
+                str(tmp),
+                "--output",
+                str(out),
+                "--qc",
+            ],
+        )
         assert result.exit_code == 0, result.output
         qc_dir = out / "04_migration" / "qc"
         pngs = list(qc_dir.glob("*.png"))
@@ -96,24 +111,38 @@ def test_front_updates_per_cell_when_present() -> None:
         cell_ids = sorted(data["theta_truth"].keys())
         n = len(cell_ids)
         centroids = data["centroids"]
-        pc = pd.DataFrame({
-            "fov_id": ["FOV_01"] * n,
-            "cell_id": cell_ids,
-            "axis_deg": [float(data["theta_truth"][c]) for c in cell_ids],
-            "magnitude": [0.5] * n,
-            "centroid_y": [float(centroids[c][0]) if c in centroids else 32.0 for c in cell_ids],
-            "centroid_x": [float(centroids[c][1]) if c in centroids else 32.0 for c in cell_ids],
-            "area_px": [200] * n,
-            "qc_flags": [0] * n,
-            "dist_to_front_um": [float("nan")] * n,
-            "mig_dir_deg": [float("nan")] * n,
-            "mig_alignment": [float("nan")] * n,
-        })
+        pc = pd.DataFrame(
+            {
+                "fov_id": ["FOV_01"] * n,
+                "cell_id": cell_ids,
+                "axis_deg": [float(data["theta_truth"][c]) for c in cell_ids],
+                "magnitude": [0.5] * n,
+                "centroid_y": [
+                    float(centroids[c][0]) if c in centroids else 32.0 for c in cell_ids
+                ],
+                "centroid_x": [
+                    float(centroids[c][1]) if c in centroids else 32.0 for c in cell_ids
+                ],
+                "area_px": [200] * n,
+                "qc_flags": [0] * n,
+                "dist_to_front_um": [float("nan")] * n,
+                "mig_dir_deg": [float("nan")] * n,
+                "mig_alignment": [float("nan")] * n,
+            }
+        )
         pc.to_parquet(agg_dir / "per_cell.parquet", index=False)
-        result = runner.invoke(main, [
-            "front", "--config", str(cfg),
-            "--input", str(tmp), "--output", str(out),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "front",
+                "--config",
+                str(cfg),
+                "--input",
+                str(tmp),
+                "--output",
+                str(out),
+            ],
+        )
         assert result.exit_code == 0, result.output
         updated = pd.read_parquet(agg_dir / "per_cell.parquet")
         assert "dist_to_front_um" in updated.columns
@@ -128,8 +157,16 @@ def test_front_no_mask_files_raises_error() -> None:
         empty_in = tmp / "empty_seg"
         empty_in.mkdir()
         out = tmp / "results"
-        result = runner.invoke(main, [
-            "front", "--config", str(cfg),
-            "--input", str(empty_in), "--output", str(out),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "front",
+                "--config",
+                str(cfg),
+                "--input",
+                str(empty_in),
+                "--output",
+                str(out),
+            ],
+        )
         assert result.exit_code != 0

@@ -33,16 +33,23 @@ def _write_pipeline_outputs(tmp: Path, n_fovs: int = 2, size: int = 64) -> dict:
             if cid not in data["centroids"]:
                 continue
             cy, cx = data["centroids"][cid]
-            rows.append({
-                "fov_id": fov_id, "cell_id": cid,
-                "centroid_y": cy, "centroid_x": cx,
-                "axis_deg": ang,
-                "magnitude": float(np.random.default_rng(cid + i).uniform(0.2, 0.9)),
-                "area_px": 200, "qc_flags": 0,
-                "dist_to_front_um": float("nan"),
-                "mig_dir_deg": float("nan"),
-                "mig_alignment": float("nan"),
-            })
+            rows.append(
+                {
+                    "fov_id": fov_id,
+                    "cell_id": cid,
+                    "centroid_y": cy,
+                    "centroid_x": cx,
+                    "axis_deg": ang,
+                    "magnitude": float(
+                        np.random.default_rng(cid + i).uniform(0.2, 0.9)
+                    ),
+                    "area_px": 200,
+                    "qc_flags": 0,
+                    "dist_to_front_um": float("nan"),
+                    "mig_dir_deg": float("nan"),
+                    "mig_alignment": float("nan"),
+                }
+            )
     df = pd.DataFrame(rows)
     df.to_parquet(agg_dir / "per_cell.parquet", index=False)
     return {"seg_dir": seg_dir, "agg_dir": agg_dir, "per_cell": df}
@@ -70,9 +77,16 @@ def test_plot_writes_summary_pdf() -> None:
         tmp = Path(td)
         _write_pipeline_outputs(tmp, n_fovs=2, size=64)
         cfg = _write_config(tmp)
-        result = runner.invoke(main, [
-            "plot", "--config", str(cfg), "--output", str(tmp),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "plot",
+                "--config",
+                str(cfg),
+                "--output",
+                str(tmp),
+            ],
+        )
         assert result.exit_code == 0, result.output
         summary_pdf = tmp / "06_plots" / "population_summary.pdf"
         assert summary_pdf.exists()
@@ -85,9 +99,16 @@ def test_plot_writes_rose_plots() -> None:
         tmp = Path(td)
         _write_pipeline_outputs(tmp, n_fovs=2, size=64)
         cfg = _write_config(tmp)
-        result = runner.invoke(main, [
-            "plot", "--config", str(cfg), "--output", str(tmp),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "plot",
+                "--config",
+                str(cfg),
+                "--output",
+                str(tmp),
+            ],
+        )
         assert result.exit_code == 0, result.output
         roses = list((tmp / "06_plots" / "roses").glob("*.pdf"))
         assert len(roses) >= 2  # one per FOV + aggregate
@@ -99,9 +120,16 @@ def test_plot_writes_vector_maps() -> None:
         tmp = Path(td)
         _write_pipeline_outputs(tmp, n_fovs=2, size=64)
         cfg = _write_config(tmp)
-        result = runner.invoke(main, [
-            "plot", "--config", str(cfg), "--output", str(tmp),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "plot",
+                "--config",
+                str(cfg),
+                "--output",
+                str(tmp),
+            ],
+        )
         assert result.exit_code == 0, result.output
         maps = list((tmp / "06_plots" / "vector_maps").glob("*.png"))
         assert len(maps) >= 2
@@ -113,7 +141,14 @@ def test_plot_missing_per_cell_raises_error() -> None:
         tmp = Path(td)
         cfg = _write_config(tmp)
         tmp.mkdir(exist_ok=True)
-        result = runner.invoke(main, [
-            "plot", "--config", str(cfg), "--output", str(tmp),
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "plot",
+                "--config",
+                str(cfg),
+                "--output",
+                str(tmp),
+            ],
+        )
         assert result.exit_code != 0

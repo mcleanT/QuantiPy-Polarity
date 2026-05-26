@@ -12,6 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,16 +56,23 @@ def plot_population_summary(
     # A. Magnitude distribution
     mags = per_cell["magnitude"].dropna().to_numpy(dtype=float)
     if len(mags) > 0:
-        ax_mag.hist(mags, bins=30, color=PALETTE["phase1"], edgecolor="white",
-                   linewidth=0.3, alpha=0.85)
+        ax_mag.hist(
+            mags,
+            bins=30,
+            color=PALETTE["phase1"],
+            edgecolor="white",
+            linewidth=0.3,
+            alpha=0.85,
+        )
     ax_mag.set_xlabel("Polarity magnitude", fontsize=7)
     ax_mag.set_ylabel("Cells", fontsize=7)
     ax_mag.set_title("A  Magnitude", fontsize=8, fontweight="bold", loc="left")
 
     # B. Aggregate rose
     angles = per_cell["axis_deg"].dropna().to_numpy(dtype=float)
-    plot_rose(angles, n_bins=n_rose_bins, half_disk=True,
-              color=PALETTE["phase1"], ax=ax_rose)
+    plot_rose(
+        angles, n_bins=n_rose_bins, half_disk=True, color=PALETTE["phase1"], ax=ax_rose
+    )
     ax_rose.set_title("B  Polarity axes", fontsize=8, fontweight="bold", pad=4)
 
     # C. Distance to front
@@ -73,12 +81,26 @@ def plot_population_summary(
     else:
         dists = np.array([])
     if len(dists) > 0:
-        ax_dist.hist(dists, bins=30, color=PALETTE["phase2"], edgecolor="white",
-                    linewidth=0.3, alpha=0.85)
+        ax_dist.hist(
+            dists,
+            bins=30,
+            color=PALETTE["phase2"],
+            edgecolor="white",
+            linewidth=0.3,
+            alpha=0.85,
+        )
         ax_dist.set_xlabel("Dist to front (µm)", fontsize=7)
     else:
-        ax_dist.text(0.5, 0.5, "No front data", ha="center", va="center",
-                    transform=ax_dist.transAxes, fontsize=7, color="gray")
+        ax_dist.text(
+            0.5,
+            0.5,
+            "No front data",
+            ha="center",
+            va="center",
+            transform=ax_dist.transAxes,
+            fontsize=7,
+            color="gray",
+        )
         ax_dist.set_axis_off()
     ax_dist.set_title("C  Dist to front", fontsize=8, fontweight="bold", loc="left")
 
@@ -86,8 +108,13 @@ def plot_population_summary(
     counts = per_cell.groupby("fov_id").size().sort_index()
     if len(counts) > 0:
         fov_labels = [str(f) for f in counts.index]
-        ax_count.bar(range(len(counts)), counts.values, color=PALETTE["phase3"],
-                    edgecolor="white", linewidth=0.3)
+        ax_count.bar(
+            range(len(counts)),
+            counts.values,
+            color=PALETTE["phase3"],
+            edgecolor="white",
+            linewidth=0.3,
+        )
         ax_count.set_xticks(range(len(counts)))
         ax_count.set_xticklabels(fov_labels, rotation=45, ha="right", fontsize=5)
         ax_count.set_ylabel("Cells", fontsize=7)

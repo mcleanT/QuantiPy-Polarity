@@ -128,9 +128,7 @@ def compute_all_fovs(
         vx, vy = fields_by_fov[fov_id]
         labels = labels_by_fov[fov_id]
         result = results_by_fov[fov_id]
-        chunks.append(
-            compute_per_cell_migration(grp, labels, vx, vy, result)
-        )
+        chunks.append(compute_per_cell_migration(grp, labels, vx, vy, result))
     if not chunks:
         return per_cell_df.copy()
     return pd.concat(chunks, ignore_index=True)

@@ -16,16 +16,18 @@ from quantipy_polarity.migration.distance import (
 
 def _synthetic_df(n: int = 5, fov_id: str = "FOV_01") -> pd.DataFrame:
     rng = np.random.default_rng(42)
-    return pd.DataFrame({
-        "fov_id": fov_id,
-        "cell_id": list(range(1, n + 1)),
-        "axis_deg": rng.uniform(0, 180, n).tolist(),
-        "magnitude": rng.uniform(0.1, 1.0, n).tolist(),
-        "centroid_y": rng.uniform(10, 50, n).tolist(),
-        "centroid_x": rng.uniform(10, 50, n).tolist(),
-        "area_px": [200] * n,
-        "qc_flags": [0] * n,
-    })
+    return pd.DataFrame(
+        {
+            "fov_id": fov_id,
+            "cell_id": list(range(1, n + 1)),
+            "axis_deg": rng.uniform(0, 180, n).tolist(),
+            "magnitude": rng.uniform(0.1, 1.0, n).tolist(),
+            "centroid_y": rng.uniform(10, 50, n).tolist(),
+            "centroid_x": rng.uniform(10, 50, n).tolist(),
+            "area_px": [200] * n,
+            "qc_flags": [0] * n,
+        }
+    )
 
 
 def _tiny_labels(n: int = 5, size: int = 64) -> np.ndarray:
@@ -33,7 +35,7 @@ def _tiny_labels(n: int = 5, size: int = 64) -> np.ndarray:
     step = size // (n + 1)
     for cid in range(1, n + 1):
         cy, cx = step * cid, step * cid
-        labels[cy - 4:cy + 4, cx - 4:cx + 4] = cid
+        labels[cy - 4 : cy + 4, cx - 4 : cx + 4] = cid
     return labels
 
 
@@ -56,8 +58,14 @@ def test_compute_per_cell_migration_adds_columns() -> None:
     labels = _tiny_labels(5, size)
     vx = np.ones((size, size), np.float32) * 5.0
     vy = np.zeros((size, size), np.float32)
-    result = FrontResult(fov_id="FOV_01", front_y_um=20.0, front_angle_deg=0.0,
-                         n_front_px=100, front_mask_shape=(size, size), pixel_size_um=0.65)
+    result = FrontResult(
+        fov_id="FOV_01",
+        front_y_um=20.0,
+        front_angle_deg=0.0,
+        n_front_px=100,
+        front_mask_shape=(size, size),
+        pixel_size_um=0.65,
+    )
     df = _synthetic_df(5)
     out = compute_per_cell_migration(df, labels, vx, vy, result)
     assert "mig_dir_deg" in out.columns
@@ -70,8 +78,14 @@ def test_compute_per_cell_migration_no_front_gives_nans() -> None:
     labels = _tiny_labels(5, size)
     vx = np.zeros((size, size), np.float32)
     vy = np.zeros((size, size), np.float32)
-    result = FrontResult(fov_id="FOV_01", front_y_um=None, front_angle_deg=None,
-                         n_front_px=0, front_mask_shape=(size, size), pixel_size_um=0.65)
+    result = FrontResult(
+        fov_id="FOV_01",
+        front_y_um=None,
+        front_angle_deg=None,
+        n_front_px=0,
+        front_mask_shape=(size, size),
+        pixel_size_um=0.65,
+    )
     df = _synthetic_df(5)
     out = compute_per_cell_migration(df, labels, vx, vy, result)
     assert out["dist_to_front_um"].isna().all()
@@ -82,8 +96,14 @@ def test_compute_all_fovs_concatenates_correctly() -> None:
     labels = _tiny_labels(5, size)
     vx = np.ones((size, size), np.float32)
     vy = np.zeros((size, size), np.float32)
-    r = FrontResult(fov_id="FOV_01", front_y_um=20.0, front_angle_deg=0.0,
-                    n_front_px=50, front_mask_shape=(size, size), pixel_size_um=0.65)
+    r = FrontResult(
+        fov_id="FOV_01",
+        front_y_um=20.0,
+        front_angle_deg=0.0,
+        n_front_px=50,
+        front_mask_shape=(size, size),
+        pixel_size_um=0.65,
+    )
     df1 = _synthetic_df(5, "FOV_01")
     df2 = _synthetic_df(3, "FOV_02")
     full = pd.concat([df1, df2], ignore_index=True)

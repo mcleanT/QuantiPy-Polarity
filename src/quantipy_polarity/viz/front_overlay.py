@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -67,8 +68,9 @@ def plot_front_overlay(
 
     # Cell outlines
     outline = find_boundaries(labels, mode="outer")
-    ax.contour(outline, levels=[0.5], colors=[PALETTE["composite"]],
-               linewidths=0.3, alpha=0.5)
+    ax.contour(
+        outline, levels=[0.5], colors=[PALETTE["composite"]], linewidths=0.3, alpha=0.5
+    )
 
     # Front ribbon: dilate front_mask by 2 px for visibility
     if front_mask.any():
@@ -76,8 +78,7 @@ def plot_front_overlay(
         rgba = np.zeros((*membrane.shape, 4), dtype=float)
         # Orange front colour
         r, g, b = tuple(
-            int(PALETTE["phase2"][i: i + 2], 16) / 255.0
-            for i in (1, 3, 5)
+            int(PALETTE["phase2"][i : i + 2], 16) / 255.0 for i in (1, 3, 5)
         )
         rgba[ribbon, 0] = r
         rgba[ribbon, 1] = g
@@ -130,6 +131,7 @@ def save_front_overlay(
     Returns path to the written PNG.
     """
     import os, tempfile
+
     fig = plot_front_overlay(membrane, labels, front_mask, **kwargs)
     out = Path(stem).with_suffix(".png")
     out.parent.mkdir(parents=True, exist_ok=True)

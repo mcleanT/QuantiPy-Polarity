@@ -21,18 +21,48 @@ log = structlog.get_logger()
 
 
 @main.command("plot", short_help="[Advanced] Regenerate plots from aggregated parquet")
-@click.option("--config", "config_path", required=True, type=click.Path(exists=True),
-              help="Path to quantipy YAML config.")
-@click.option("--output", "output_dir", required=True, type=click.Path(exists=True),
-              help="Results directory containing 05_aggregated/per_cell.parquet.")
-@click.option("--per-fov-maps", is_flag=True, default=True, show_default=True,
-              help="Generate per-FOV polarity vector maps.")
-@click.option("--rose", is_flag=True, default=True, show_default=True,
-              help="Generate per-FOV and aggregate rose plots.")
-@click.option("--summary", is_flag=True, default=True, show_default=True,
-              help="Generate population summary panel.")
-@click.option("--front-overlays", is_flag=True, default=True, show_default=True,
-              help="Generate front overlay PNGs (requires 04_migration/).")
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to quantipy YAML config.",
+)
+@click.option(
+    "--output",
+    "output_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Results directory containing 05_aggregated/per_cell.parquet.",
+)
+@click.option(
+    "--per-fov-maps",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Generate per-FOV polarity vector maps.",
+)
+@click.option(
+    "--rose",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Generate per-FOV and aggregate rose plots.",
+)
+@click.option(
+    "--summary",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Generate population summary panel.",
+)
+@click.option(
+    "--front-overlays",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Generate front overlay PNGs (requires 04_migration/).",
+)
 def figures_cmd(
     config_path: str,
     output_dir: str,
@@ -59,7 +89,9 @@ def figures_cmd(
             "Run `quantipy polarity` and `quantipy aggregate` first."
         )
     per_cell = pd.read_parquet(per_cell_path)
-    log.info("loaded per_cell", n_cells=len(per_cell), n_fovs=per_cell["fov_id"].nunique())
+    log.info(
+        "loaded per_cell", n_cells=len(per_cell), n_fovs=per_cell["fov_id"].nunique()
+    )
 
     pixel_size_um: float = getattr(cfg.input, "pixel_size_um", 0.65)
 
@@ -68,18 +100,19 @@ def figures_cmd(
     front_df: pd.DataFrame | None = None
     if front_parquet.exists():
         from quantipy_polarity.migration.front_io import read_front_parquet
+
         front_df = read_front_parquet(front_parquet)
         log.info("loaded front parquet", n_fovs=len(front_df))
 
     seg_dir = out / "02_segmentation"
 
     if per_fov_maps:
-        _generate_vector_maps(per_cell, seg_dir, plots_dir, pixel_size_um,
-                              getattr(cfg, "viz", None))
+        _generate_vector_maps(
+            per_cell, seg_dir, plots_dir, pixel_size_um, getattr(cfg, "viz", None)
+        )
 
     if rose:
-        _generate_rose_plots(per_cell, plots_dir,
-                             getattr(cfg, "viz", None))
+        _generate_rose_plots(per_cell, plots_dir, getattr(cfg, "viz", None))
 
     if front_overlays and front_df is not None:
         _generate_front_overlays(per_cell, seg_dir, front_df, plots_dir, pixel_size_um)
@@ -98,6 +131,7 @@ def _generate_vector_maps(
     viz_cfg: object,
 ) -> None:
     from quantipy_polarity.viz.vector_map import save_vector_map
+
     vec_dir = plots_dir / "vector_maps"
     vec_dir.mkdir(parents=True, exist_ok=True)
     vector_scale = float(getattr(viz_cfg, "vector_scale", 1.0)) if viz_cfg else 1.0
@@ -118,7 +152,9 @@ def _generate_vector_maps(
         if membrane.ndim == 3:
             membrane = membrane[..., 0]
         save_vector_map(
-            membrane, labels, fov_df,
+            membrane,
+            labels,
+            fov_df,
             vec_dir / fov_id,
             pixel_size_um=pixel_size_um,
             vector_scale=vector_scale,
@@ -135,6 +171,7 @@ def _generate_rose_plots(
     from quantipy_polarity.viz.rose_plot import save_rose, plot_rose_grouped
     from quantipy_polarity.viz._style import save_figure
     import matplotlib.pyplot as plt
+
     rose_dir = plots_dir / "roses"
     rose_dir.mkdir(parents=True, exist_ok=True)
     n_bins = int(getattr(viz_cfg, "rose_bins", 24)) if viz_cfg else 24
@@ -162,6 +199,7 @@ def _generate_front_overlays(
 ) -> None:
     from quantipy_polarity.viz.front_overlay import save_front_overlay
     from quantipy_polarity.migration.front_detect import _compute_migration_field_v6
+
     overlay_dir = plots_dir / "front_overlays"
     overlay_dir.mkdir(parents=True, exist_ok=True)
 
@@ -182,16 +220,21 @@ def _generate_front_overlays(
         _vx, _vy, front_mask = _compute_migration_field_v6(labels)
         fov_df = per_cell[per_cell["fov_id"] == fov_id] if len(per_cell) else None
         save_front_overlay(
-            membrane, labels, front_mask,
+            membrane,
+            labels,
+            front_mask,
             overlay_dir / f"{fov_id}_front",
             fov_df=fov_df if (fov_df is not None and len(fov_df) > 0) else None,
-            vx=_vx, vy=_vy, title=fov_id,
+            vx=_vx,
+            vy=_vy,
+            title=fov_id,
         )
         log.info("wrote front overlay", fov_id=fov_id)
 
 
 def _generate_summary(per_cell: pd.DataFrame, plots_dir: Path) -> None:
     from quantipy_polarity.viz.summary import save_population_summary
+
     n_fovs = per_cell["fov_id"].nunique()
     n_cells = len(per_cell)
     save_population_summary(

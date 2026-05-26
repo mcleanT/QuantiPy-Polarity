@@ -96,7 +96,5 @@ def read_front_parquet(path: Path) -> pd.DataFrame:
     df = pd.read_parquet(path)
     missing = [c for c in _COLUMNS if c not in df.columns]
     if missing:
-        raise ValueError(
-            f"front parquet at {path} is missing columns: {missing}"
-        )
+        raise ValueError(f"front parquet at {path} is missing columns: {missing}")
     return df[list(_COLUMNS)]

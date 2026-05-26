@@ -18,9 +18,7 @@ from quantipy_polarity.migration.front_detect import (
 from quantipy_polarity.contracts import FrontResult
 
 
-def _make_half_dense_labels(
-    H: int = 128, W: int = 128, cell_w: int = 8
-) -> np.ndarray:
+def _make_half_dense_labels(H: int = 128, W: int = 128, cell_w: int = 8) -> np.ndarray:
     """Left half filled with grid cells; right half empty background."""
     labels = np.zeros((H, W), dtype=np.uint16)
     cell_id = 1
@@ -33,7 +31,9 @@ def _make_half_dense_labels(
 
 def test_compute_migration_field_returns_correct_shapes() -> None:
     labels = _make_half_dense_labels(64, 64, 8)
-    vx, vy, front_mask = _compute_migration_field_v6(labels, density_sigma_px=15.0, border_margin_px=3)
+    vx, vy, front_mask = _compute_migration_field_v6(
+        labels, density_sigma_px=15.0, border_margin_px=3
+    )
     assert vx.shape == (64, 64)
     assert vy.shape == (64, 64)
     assert front_mask.shape == (64, 64)
@@ -85,8 +85,13 @@ def test_front_principal_angle_too_few_pixels_returns_nan() -> None:
 
 def test_detect_front_returns_front_result() -> None:
     labels = _make_half_dense_labels(128, 128, 8)
-    result = detect_front(labels, pixel_size_um=0.65, fov_id="FOV_01",
-                          density_sigma_px=20.0, border_margin_px=5)
+    result = detect_front(
+        labels,
+        pixel_size_um=0.65,
+        fov_id="FOV_01",
+        density_sigma_px=20.0,
+        border_margin_px=5,
+    )
     assert isinstance(result, FrontResult)
     assert result.fov_id == "FOV_01"
     assert result.pixel_size_um == 0.65
@@ -95,8 +100,13 @@ def test_detect_front_returns_front_result() -> None:
 
 def test_detect_front_populated_fields() -> None:
     labels = _make_half_dense_labels(128, 128, 8)
-    result = detect_front(labels, pixel_size_um=0.65, fov_id="FOV_02",
-                          density_sigma_px=20.0, border_margin_px=5)
+    result = detect_front(
+        labels,
+        pixel_size_um=0.65,
+        fov_id="FOV_02",
+        density_sigma_px=20.0,
+        border_margin_px=5,
+    )
     if result.n_front_px > 0:
         assert result.front_y_um is not None
         assert result.front_y_um > 0.0

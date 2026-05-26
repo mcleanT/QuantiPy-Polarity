@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -81,8 +82,16 @@ def plot_rose(
         theta = (bins[:-1] + bins[1:]) / 2.0
         width = span / n_bins
 
-    ax.bar(theta, counts, width=width, color=color, alpha=0.8,
-           edgecolor="white", linewidth=0.3, align="center")
+    ax.bar(
+        theta,
+        counts,
+        width=width,
+        color=color,
+        alpha=0.8,
+        edgecolor="white",
+        linewidth=0.3,
+        align="center",
+    )
     ax.set_theta_zero_location("E")
     ax.set_theta_direction(1)
     ax.tick_params(labelsize=5)
@@ -128,7 +137,8 @@ def plot_rose_grouped(
     )
     n = len(conditions)
     fig, axes = plt.subplots(
-        1, n,
+        1,
+        n,
         subplot_kw={"projection": "polar"},
         figsize=(figsize_per_panel[0] * n, figsize_per_panel[1]),
         constrained_layout=True,
@@ -143,8 +153,14 @@ def plot_rose_grouped(
         else:
             angles = df[df[condition_col] == cond][angle_col].to_numpy(dtype=float)
         color = palette_vals[i % len(palette_vals)]
-        plot_rose(angles, n_bins=n_bins, half_disk=half_disk,
-                  title=str(cond), color=color, ax=ax)
+        plot_rose(
+            angles,
+            n_bins=n_bins,
+            half_disk=half_disk,
+            title=str(cond),
+            color=color,
+            ax=ax,
+        )
 
     return fig
 

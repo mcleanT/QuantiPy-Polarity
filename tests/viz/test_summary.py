@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,17 +15,20 @@ import pandas as pd
 
 def _make_per_cell(n: int = 60) -> pd.DataFrame:
     rng = np.random.default_rng(99)
-    return pd.DataFrame({
-        "fov_id": [f"FOV_{i % 3 + 1:02d}" for i in range(n)],
-        "cell_id": list(range(1, n + 1)),
-        "axis_deg": rng.uniform(0, 180, n),
-        "magnitude": rng.uniform(0.1, 1.0, n),
-        "dist_to_front_um": rng.uniform(0, 100, n),
-    })
+    return pd.DataFrame(
+        {
+            "fov_id": [f"FOV_{i % 3 + 1:02d}" for i in range(n)],
+            "cell_id": list(range(1, n + 1)),
+            "axis_deg": rng.uniform(0, 180, n),
+            "magnitude": rng.uniform(0.1, 1.0, n),
+            "dist_to_front_um": rng.uniform(0, 100, n),
+        }
+    )
 
 
 def test_plot_population_summary_returns_figure() -> None:
     from quantipy_polarity.viz.summary import plot_population_summary
+
     df = _make_per_cell(40)
     fig = plot_population_summary(df)
     assert hasattr(fig, "savefig")
@@ -33,6 +37,7 @@ def test_plot_population_summary_returns_figure() -> None:
 
 def test_plot_population_summary_no_dist_col() -> None:
     from quantipy_polarity.viz.summary import plot_population_summary
+
     df = _make_per_cell(20).drop(columns=["dist_to_front_um"])
     fig = plot_population_summary(df)
     assert fig is not None
@@ -41,6 +46,7 @@ def test_plot_population_summary_no_dist_col() -> None:
 
 def test_plot_population_summary_all_dist_nan() -> None:
     from quantipy_polarity.viz.summary import plot_population_summary
+
     df = _make_per_cell(20)
     df["dist_to_front_um"] = np.nan
     fig = plot_population_summary(df)
@@ -50,6 +56,7 @@ def test_plot_population_summary_all_dist_nan() -> None:
 
 def test_save_population_summary_writes_png_and_pdf() -> None:
     from quantipy_polarity.viz.summary import save_population_summary
+
     df = _make_per_cell(30)
     with tempfile.TemporaryDirectory() as td:
         paths = save_population_summary(df, Path(td) / "summary_test")

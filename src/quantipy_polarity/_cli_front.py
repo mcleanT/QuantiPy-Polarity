@@ -28,17 +28,42 @@ from quantipy_polarity.migration.distance import compute_per_cell_migration
 log = structlog.get_logger()
 
 
-@main.command("front", short_help="[Advanced] Migration-front detection (auto only in v0.1.0)")
-@click.option("--config", "config_path", required=True, type=click.Path(exists=True),
-              help="Path to quantipy YAML config.")
-@click.option("--input", "input_dir", required=True, type=click.Path(exists=True),
-              help="Directory containing 02_segmentation/ label masks.")
-@click.option("--output", "output_dir", required=True, type=click.Path(),
-              help="Results directory; 04_migration/ written here.")
-@click.option("--qc", is_flag=True, default=False,
-              help="Write per-FOV QC overlay PNGs into 04_migration/qc/.")
-@click.option("--resume", is_flag=True, default=False,
-              help="Skip FOVs already in front_um_per_fov.parquet.")
+@main.command(
+    "front", short_help="[Advanced] Migration-front detection (auto only in v0.1.0)"
+)
+@click.option(
+    "--config",
+    "config_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Path to quantipy YAML config.",
+)
+@click.option(
+    "--input",
+    "input_dir",
+    required=True,
+    type=click.Path(exists=True),
+    help="Directory containing 02_segmentation/ label masks.",
+)
+@click.option(
+    "--output",
+    "output_dir",
+    required=True,
+    type=click.Path(),
+    help="Results directory; 04_migration/ written here.",
+)
+@click.option(
+    "--qc",
+    is_flag=True,
+    default=False,
+    help="Write per-FOV QC overlay PNGs into 04_migration/qc/.",
+)
+@click.option(
+    "--resume",
+    is_flag=True,
+    default=False,
+    help="Skip FOVs already in front_um_per_fov.parquet.",
+)
 def front_cmd(
     config_path: str,
     input_dir: str,
@@ -84,6 +109,7 @@ def front_cmd(
     pixel_size_um: float = getattr(cfg.input, "pixel_size_um", 0.65)
 
     from quantipy_polarity.contracts import FrontResult
+
     results: list[FrontResult] = []
     vx_by_fov: dict[str, np.ndarray] = {}
     vy_by_fov: dict[str, np.ndarray] = {}
@@ -97,7 +123,9 @@ def front_cmd(
         log.info("detecting front", fov_id=fov_id)
         labels = tifffile.imread(str(mask_file)).astype(np.int32)
         if labels.ndim != 2:
-            log.warning("label mask is not 2-D, skipping", fov_id=fov_id, shape=labels.shape)
+            log.warning(
+                "label mask is not 2-D, skipping", fov_id=fov_id, shape=labels.shape
+            )
             continue
 
         result = detect_front(labels, pixel_size_um=pixel_size_um, fov_id=fov_id)
@@ -109,9 +137,7 @@ def front_cmd(
         labels_by_fov[fov_id] = labels
 
         if qc:
-            _write_qc_overlay(
-                mask_file, labels, _front_mask, mig_dir / "qc", fov_id
-            )
+            _write_qc_overlay(mask_file, labels, _front_mask, mig_dir / "qc", fov_id)
 
     if results:
         write_front_parquet(results, front_parquet)
@@ -121,8 +147,11 @@ def front_cmd(
     per_cell_path = output_path / "05_aggregated" / "per_cell.parquet"
     if per_cell_path.exists() and results:
         _update_per_cell(
-            per_cell_path, labels_by_fov, vx_by_fov, vy_by_fov,
-            {r.fov_id: r for r in results}
+            per_cell_path,
+            labels_by_fov,
+            vx_by_fov,
+            vy_by_fov,
+            {r.fov_id: r for r in results},
         )
 
 
@@ -135,6 +164,7 @@ def _write_qc_overlay(
 ) -> None:
     """Write a front QC overlay PNG next to the mask file."""
     from quantipy_polarity.viz.front_overlay import save_front_overlay
+
     qc_dir.mkdir(parents=True, exist_ok=True)
     # Membrane TIF is expected as <fov_id>_membrane.tif sibling
     mem_path = mask_file.parent / f"{fov_id}_membrane.tif"
@@ -146,7 +176,9 @@ def _write_qc_overlay(
         membrane = (labels > 0).astype(np.float32)
 
     save_front_overlay(
-        membrane, labels, front_mask,
+        membrane,
+        labels,
+        front_mask,
         qc_dir / f"{fov_id}_front_overlay",
         title=fov_id,
     )
@@ -166,7 +198,8 @@ def _update_per_cell(
 
     df = pd.read_parquet(per_cell_path)
     updated = compute_all_fovs(
-        df, labels_by_fov,
+        df,
+        labels_by_fov,
         {fov: (vx_by_fov[fov], vy_by_fov[fov]) for fov in vx_by_fov},
         results_by_fov,
     )
@@ -177,8 +210,11 @@ def _update_per_cell(
     try:
         updated.to_parquet(tmp, index=False)
         os.replace(tmp, per_cell_path)
-        log.info("updated per_cell.parquet with migration columns",
-                 path=str(per_cell_path), n_rows=len(updated))
+        log.info(
+            "updated per_cell.parquet with migration columns",
+            path=str(per_cell_path),
+            n_rows=len(updated),
+        )
     except Exception:
         try:
             os.unlink(tmp)

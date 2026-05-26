@@ -15,10 +15,22 @@ from quantipy_polarity.migration.front_io import read_front_parquet, write_front
 
 def _make_results() -> list[FrontResult]:
     return [
-        FrontResult(fov_id="FOV_01", front_y_um=45.5, front_angle_deg=87.3,
-                    n_front_px=320, front_mask_shape=(128, 128), pixel_size_um=0.65),
-        FrontResult(fov_id="FOV_02", front_y_um=None, front_angle_deg=None,
-                    n_front_px=0, front_mask_shape=(128, 128), pixel_size_um=0.65),
+        FrontResult(
+            fov_id="FOV_01",
+            front_y_um=45.5,
+            front_angle_deg=87.3,
+            n_front_px=320,
+            front_mask_shape=(128, 128),
+            pixel_size_um=0.65,
+        ),
+        FrontResult(
+            fov_id="FOV_02",
+            front_y_um=None,
+            front_angle_deg=None,
+            n_front_px=0,
+            front_mask_shape=(128, 128),
+            pixel_size_um=0.65,
+        ),
     ]
 
 
@@ -44,9 +56,12 @@ def test_roundtrip_preserves_values() -> None:
 def test_write_is_atomic_no_partial_file_on_error() -> None:
     """write_front_parquet cleans up temp file if serialisation fails."""
     import unittest.mock as mock
+
     with tempfile.TemporaryDirectory() as td:
         out = Path(td) / "front.parquet"
-        with mock.patch("pandas.DataFrame.to_parquet", side_effect=RuntimeError("disk full")):
+        with mock.patch(
+            "pandas.DataFrame.to_parquet", side_effect=RuntimeError("disk full")
+        ):
             with pytest.raises(RuntimeError, match="disk full"):
                 write_front_parquet(_make_results(), out)
         # Output file must not exist after failed write

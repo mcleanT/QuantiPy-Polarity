@@ -13,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -40,8 +41,14 @@ def _draw_axial_line(
     th = np.radians(angle_deg)
     dx = np.cos(th) * length / 2.0
     dy = -np.sin(th) * length / 2.0
-    ax.plot([cx - dx, cx + dx], [cy - dy, cy + dy],
-            "-", color=color, lw=lw, solid_capstyle="round")
+    ax.plot(
+        [cx - dx, cx + dx],
+        [cy - dy, cy + dy],
+        "-",
+        color=color,
+        lw=lw,
+        solid_capstyle="round",
+    )
 
 
 def plot_vector_map(
@@ -82,8 +89,9 @@ def plot_vector_map(
 
     # Cell outlines
     outline = find_boundaries(labels, mode="outer")
-    ax.contour(outline, levels=[0.5], colors=[PALETTE["composite"]],
-               linewidths=0.4, alpha=0.6)
+    ax.contour(
+        outline, levels=[0.5], colors=[PALETTE["composite"]], linewidths=0.4, alpha=0.6
+    )
 
     # Arrows coloured by magnitude
     if len(fov_df) > 0:
