@@ -70,3 +70,16 @@ class FOVManifestEntry(BaseModel):
     shape: tuple[int, int, int]  # (H, W, C)
     pixel_size_um: float
     condition: str | None = None
+
+
+class SegmentationResult(BaseModel):
+    """Metadata emitted alongside each label mask by segment/cellpose_sam.py."""
+
+    fov_id: str
+    n_cells_total: int = Field(ge=0)
+    n_cells_after_filter: int = Field(ge=0)
+    flow_threshold: float
+    cellprob_threshold: float
+    diameter_px: float | None
+    min_size_px: int
+    model: str

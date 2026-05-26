@@ -1,1 +1,4 @@
-"""Cellpose-SAM wrapper + postprocess. Implemented in Phase 3."""
+"""Segmentation subpackage for QuantiPy Polarity.
+
+Public entry point: segment_fov() in cellpose_sam.py.
+"""
