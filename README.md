@@ -5,11 +5,11 @@ Python implementation and packaging of the QuantifyPolarity (QP) PCA
 cell-by-cell polarity pipeline, plus migration-front detection, rose plots,
 polarity vector maps, and a self-contained HTML report.
 
-## Status: v0.1.0 Phase 1 (scaffolding) complete
+## Status: v0.1.0 Phase 5 complete
 
-This repository now installs and exposes the full CLI surface, with most
-subcommands stubbed for later phases. See `docs/superpowers/plans/` for the
-phased roadmap.
+This repository now implements the full end-to-end pipeline.  `quantipy run`
+orchestrates all stages and writes a self-contained `report.html`.
+See `docs/superpowers/plans/` for the phased roadmap.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
@@ -17,9 +17,35 @@ phased roadmap.
 | 2 | Masks → polarity pipeline | ✅ Complete |
 | 3 | TIF/ND2 ingest + Cellpose-SAM segmentation | ✅ Complete |
 | 4 | Migration front detection + visualization | ✅ Complete |
-| 5 | `quantipy run` orchestration + resume/atomic writes | 🔲 Planned |
+| 5 | `quantipy run` orchestration + resume/atomic writes | ✅ Complete |
 | 6 | Demo bundle + validation + HTML report | 🔲 Planned |
 | 7 | Interactive viewer + experimental analyses | 🔲 Planned |
+
+## Quickstart (Phase 5)
+
+```bash
+pip install -e ".[dev,pipeline]"
+quantipy init-config --mode masks --output config.yaml
+quantipy run --config config.yaml --output ./results
+open ./results/report.html
+```
+
+`quantipy run` orchestrates all stages end-to-end and writes a self-contained
+`report.html`.  Re-running the same command on an existing results directory
+**resumes automatically** — only stages that have not yet completed are
+re-executed.
+
+### Pipeline resume
+
+| Flag | Behaviour |
+|------|-----------|
+| *(none)* / `--resume` | Skip stages already marked `done`; retry from the first `failed` stage |
+| `--force` | Wipe all stage-status caches and re-run every stage from scratch |
+
+See `docs/pipeline.md` for the full orchestration architecture, stage
+descriptions, and run directory layout.
+
+---
 
 ## Install (Phase 1 — CLI only)
 

@@ -15,12 +15,13 @@ microscopy images. The `quantipy` command is installed by
 |---|---|---|
 | `quantipy init-config --mode {nd2,tif,masks}` | implemented | Scaffold a config YAML |
 | `quantipy --version` / `--help` | implemented | CLI introspection |
-| `quantipy run` | stubbed (Phase 5) | Single-shot pipeline |
+| `quantipy run` | implemented (Phase 5) | Single-shot pipeline; --resume/--force |
 | `quantipy polarity` / `aggregate` | implemented (Phase 2) | Masks→per-cell→experiment parquet |
 | `quantipy segment` | implemented (Phase 3) | TIF/ND2 → Cellpose-SAM → label masks |
 | `quantipy front` | implemented (Phase 4) | Migration-front detection; writes `04_migration/front_um_per_fov.parquet` + QC PNGs |
 | `quantipy plot` | implemented (Phase 4) | Regenerate all figures (vector maps, roses, overlays, summary) from existing parquet |
-| `quantipy ingest` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
+| `quantipy ingest` | implemented (Phase 5) | nd2/tif → normalized per-FOV TIFs |
+| `quantipy report` | implemented (Phase 5) | Regenerate self-contained HTML report |
 | `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
 | `quantipy validate` | stubbed (Phase 6) | QP-vs-Python figure regeneration |
 | `quantipy download-demo` | stubbed (Phase 6) | Pull demo bundle from Release |
@@ -41,6 +42,7 @@ microscopy images. The `quantipy` command is installed by
 - `tests/fixtures/_build.py` + `synthetic_fov.npz` — ground-truth fixture
 - `docs/superpowers/specs/` — design spec + codex review
 - `docs/superpowers/plans/` — phased implementation plans
+- `docs/pipeline.md` — orchestration architecture: stages, state management, resume/force, output layout, run.log
 - `tests/` — pytest suite
 
 ## Guard
