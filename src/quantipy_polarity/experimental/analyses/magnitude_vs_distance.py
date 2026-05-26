@@ -1,4 +1,5 @@
 """Scatter of polarity magnitude vs distance-to-front with Theil-Sen robust regression."""
+
 from __future__ import annotations
 
 import json

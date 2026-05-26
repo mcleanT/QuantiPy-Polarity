@@ -1,4 +1,5 @@
 """Tests for experimental.analyses.polarity_by_condition."""
+
 from __future__ import annotations
 
 import math
@@ -17,7 +18,10 @@ from quantipy_polarity.experimental.analyses.polarity_by_condition import (
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_per_cell(tmp_path: Path, n: int = 30, conditions: list[str] | None = None) -> tuple[Path, Path]:
+
+def _make_per_cell(
+    tmp_path: Path, n: int = 30, conditions: list[str] | None = None
+) -> tuple[Path, Path]:
     """Write synthetic per_cell.parquet + metadata.csv with *n* rows.
 
     Returns (per_cell_path, metadata_path).
@@ -44,6 +48,7 @@ def _make_per_cell(tmp_path: Path, n: int = 30, conditions: list[str] | None = N
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_two_group_produces_pdf_and_json(tmp_path):
     per_cell_path, metadata_path = _make_per_cell(tmp_path)
@@ -87,7 +92,9 @@ def test_three_group_no_p_value(tmp_path):
 def test_missing_per_cell_raises_fnf(tmp_path):
     _, metadata_path = _make_per_cell(tmp_path)
     with pytest.raises(FileNotFoundError):
-        run_polarity_by_condition(tmp_path / "does_not_exist.parquet", metadata_path, tmp_path)
+        run_polarity_by_condition(
+            tmp_path / "does_not_exist.parquet", metadata_path, tmp_path
+        )
 
 
 def test_missing_metadata_raises_fnf(tmp_path):

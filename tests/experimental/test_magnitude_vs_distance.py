@@ -1,4 +1,5 @@
 """Tests for experimental.analyses.magnitude_vs_distance."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,6 +16,7 @@ from quantipy_polarity.experimental.analyses.magnitude_vs_distance import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_parquet(
     tmp_path: Path,
@@ -37,6 +39,7 @@ def _make_parquet(
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_with_distance_col_produces_pdf_and_json(tmp_path):
     per_cell_path = _make_parquet(tmp_path)

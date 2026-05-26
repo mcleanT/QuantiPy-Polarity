@@ -68,7 +68,9 @@ def build_viewer(
     # Encode per-FOV polarity map PNGs as base64 strings
     fov_images: dict[str, str] = {}
     for fov_id in fovs:
-        candidates = sorted(maps_dir.glob(f"{fov_id}*.png")) if maps_dir.exists() else []
+        candidates = (
+            sorted(maps_dir.glob(f"{fov_id}*.png")) if maps_dir.exists() else []
+        )
         if candidates:
             img_bytes = candidates[0].read_bytes()
             fov_images[fov_id] = base64.b64encode(img_bytes).decode("ascii")

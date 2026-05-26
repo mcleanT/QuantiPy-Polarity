@@ -67,10 +67,14 @@ def polarity_by_condition_cmd(
     from quantipy_polarity.experimental.analyses.polarity_by_condition import (
         run_polarity_by_condition,
     )
+
     try:
         results = run_polarity_by_condition(
-            per_cell_path, metadata_path, output_dir,
-            condition_col=condition_col, magnitude_col=magnitude_col,
+            per_cell_path,
+            metadata_path,
+            output_dir,
+            condition_col=condition_col,
+            magnitude_col=magnitude_col,
         )
     except (FileNotFoundError, ValueError) as exc:
         raise click.ClickException(str(exc)) from exc
@@ -129,9 +133,11 @@ def magnitude_vs_distance_cmd(
     from quantipy_polarity.experimental.analyses.magnitude_vs_distance import (
         run_magnitude_vs_distance,
     )
+
     try:
         results = run_magnitude_vs_distance(
-            per_cell_path, output_dir,
+            per_cell_path,
+            output_dir,
             magnitude_col=magnitude_col,
             distance_col=distance_col,
             max_cells=max_cells,

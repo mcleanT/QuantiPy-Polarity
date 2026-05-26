@@ -71,7 +71,15 @@ def test_debug_fov_flag(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(
         main,
-        ["debug", "--results", str(results), "--output", str(out_path), "--fov", "fov_A"],
+        [
+            "debug",
+            "--results",
+            str(results),
+            "--output",
+            str(out_path),
+            "--fov",
+            "fov_A",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert out_path.exists()

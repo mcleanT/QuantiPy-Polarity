@@ -124,7 +124,9 @@ def test_polarity_by_condition_runs_end_to_end(tmp_path: Path) -> None:
 
 def test_magnitude_vs_distance_runs_end_to_end(tmp_path: Path) -> None:
     """With synthetic parquet including distance col, exits 0."""
-    per_cell = _write_per_cell_parquet(tmp_path / "per_cell.parquet", include_distance=True)
+    per_cell = _write_per_cell_parquet(
+        tmp_path / "per_cell.parquet", include_distance=True
+    )
     out_dir = tmp_path / "out"
 
     runner = CliRunner()
@@ -144,7 +146,9 @@ def test_magnitude_vs_distance_runs_end_to_end(tmp_path: Path) -> None:
 
 def test_magnitude_vs_distance_no_distance_col_exits_zero(tmp_path: Path) -> None:
     """Without distance col, exits 0 (graceful) and prints the note."""
-    per_cell = _write_per_cell_parquet(tmp_path / "per_cell.parquet", include_distance=False)
+    per_cell = _write_per_cell_parquet(
+        tmp_path / "per_cell.parquet", include_distance=False
+    )
     out_dir = tmp_path / "out"
 
     runner = CliRunner()

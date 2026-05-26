@@ -28,7 +28,7 @@ def _make_minimal_png(path: Path) -> None:
     ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
     ihdr_chunk = b"IHDR" + ihdr_data
     ihdr = struct.pack(">I", 13) + ihdr_chunk + _crc(ihdr_chunk)
-    raw_row = b"\x00\xFF\xFF\xFF"  # filter byte + RGB
+    raw_row = b"\x00\xff\xff\xff"  # filter byte + RGB
     idat_data = zlib.compress(raw_row)
     idat_chunk = b"IDAT" + idat_data
     idat = struct.pack(">I", len(idat_data)) + idat_chunk + _crc(idat_chunk)

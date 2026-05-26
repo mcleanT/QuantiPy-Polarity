@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,7 +40,9 @@ def run_polarity_by_condition(
         ValueError: If required columns are missing or fewer than 2 groups found.
     """
     per_cell_path, metadata_path, output_dir = (
-        Path(per_cell_path), Path(metadata_path), Path(output_dir)
+        Path(per_cell_path),
+        Path(metadata_path),
+        Path(output_dir),
     )
     for p in (per_cell_path, metadata_path):
         if not p.exists():
@@ -49,8 +52,12 @@ def run_polarity_by_condition(
     sep = "\t" if str(metadata_path).endswith(".tsv") else ","
     meta = pd.read_csv(metadata_path, sep=sep)
 
-    for col, src in [(magnitude_col, "per_cell"), ("fov_id", "per_cell"),
-                     (condition_col, "metadata"), ("fov_id", "metadata")]:
+    for col, src in [
+        (magnitude_col, "per_cell"),
+        ("fov_id", "per_cell"),
+        (condition_col, "metadata"),
+        ("fov_id", "metadata"),
+    ]:
         src_df = df if src == "per_cell" else meta
         if col not in src_df.columns:
             raise ValueError(f"Column {col!r} not found in {src} file")
@@ -58,10 +65,14 @@ def run_polarity_by_condition(
     merged = df.merge(meta[["fov_id", condition_col]], on="fov_id", how="inner")
     groups = sorted(merged[condition_col].dropna().unique().tolist())
     if len(groups) < 2:
-        raise ValueError(f"Fewer than 2 groups found in column {condition_col!r}: {groups}")
+        raise ValueError(
+            f"Fewer than 2 groups found in column {condition_col!r}: {groups}"
+        )
 
-    group_data = [merged.loc[merged[condition_col] == g, magnitude_col].dropna().values
-                  for g in groups]
+    group_data = [
+        merged.loc[merged[condition_col] == g, magnitude_col].dropna().values
+        for g in groups
+    ]
     n_per_group = [int(len(d)) for d in group_data]
     medians = [float(np.median(d)) for d in group_data]
 
@@ -69,7 +80,9 @@ def run_polarity_by_condition(
     test_used = None
     note = None
     if len(groups) == 2:
-        stat, p_value = stats.mannwhitneyu(group_data[0], group_data[1], alternative="two-sided")
+        stat, p_value = stats.mannwhitneyu(
+            group_data[0], group_data[1], alternative="two-sided"
+        )
         p_value = float(p_value)
         test_used = "Mann-Whitney U"
     else:
@@ -78,17 +91,32 @@ def run_polarity_by_condition(
     # Figure
     apply_nature_style()
     fig, ax = plt.subplots(figsize=(1.6 * len(groups) + 0.8, 3.0))
-    bp = ax.boxplot(group_data, patch_artist=True, widths=0.5, medianprops={"color": "#272727", "linewidth": 1.5})
+    bp = ax.boxplot(
+        group_data,
+        patch_artist=True,
+        widths=0.5,
+        medianprops={"color": "#272727", "linewidth": 1.5},
+    )
     palette = ["#5B8FD6", "#E28E2C", "#7BAA5B", "#C45AD6", "#D24B40"]
     for patch, color in zip(bp["boxes"], palette):
         patch.set_facecolor(color)
         patch.set_alpha(0.7)
     ax.set_xticks(range(1, len(groups) + 1))
-    ax.set_xticklabels([f"{g}\n(N={n})" for g, n in zip(groups, n_per_group)], fontsize=6)
+    ax.set_xticklabels(
+        [f"{g}\n(N={n})" for g, n in zip(groups, n_per_group)], fontsize=6
+    )
     ax.set_ylabel("Polarity magnitude", fontsize=7)
     ax.set_xlabel(condition_col, fontsize=7)
     if p_value is not None:
-        sig = "***" if p_value < 0.001 else "**" if p_value < 0.01 else "*" if p_value < 0.05 else "ns"
+        sig = (
+            "***"
+            if p_value < 0.001
+            else "**"
+            if p_value < 0.01
+            else "*"
+            if p_value < 0.05
+            else "ns"
+        )
         ax.set_title(f"Mann-Whitney U  p={p_value:.3g}  {sig}", fontsize=7)
 
     output_dir.mkdir(parents=True, exist_ok=True)
