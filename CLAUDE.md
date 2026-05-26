@@ -23,8 +23,8 @@ microscopy images. The `quantipy` command is installed by
 | `quantipy ingest` | implemented (Phase 5) | nd2/tif → normalized per-FOV TIFs |
 | `quantipy report` | implemented (Phase 5) | Regenerate self-contained HTML report |
 | `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
-| `quantipy validate` | stubbed (Phase 6) | QP-vs-Python figure regeneration |
-| `quantipy download-demo` | stubbed (Phase 6) | Pull demo bundle from Release |
+| `quantipy validate` | implemented (Phase 6) | QP-vs-Python figure regeneration |
+| `quantipy download-demo` | implemented (Phase 6) | Pull demo bundle from Release |
 | `quantipy analyze <name>` | stubbed (Phase 7) | Experimental analyses |
 
 ## Where things live
@@ -50,6 +50,24 @@ microscopy images. The `quantipy` command is installed by
 Read `docs/superpowers/specs/2026-05-26-quantipy-polarity-design.md` (rev 1)
 before modifying any module — the spec defines stable contracts (per_cell
 schema, coord conventions, axial angle range) that downstream phases depend on.
+
+## Implementation phases
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| 1 | CLI scaffold, Pydantic config | ✅ implemented |
+| 2 | Masks → polarity pipeline | ✅ implemented |
+| 3 | TIF/ND2 ingest + Cellpose-SAM segmentation | ✅ implemented |
+| 4 | Migration front detection + visualization | ✅ implemented |
+| 5 | `quantipy run` orchestration + resume/atomic writes | ✅ implemented |
+| 6 | Validation + Demo + Release | ✅ implemented |
+| 7 | Interactive viewer + experimental analyses | 🔲 planned |
+
+### Phase 6 summary
+
+- `quantipy download-demo` — fetches the synthetic demo bundle (~5 MB) from the GitHub Release asset and extracts it to `~/.cache/quantipy/demo/`; falls back to `demo/` if already present in the repo clone.
+- `quantipy validate` — runs the QP-vs-Python cross-validation, prints R² and slope to stdout, and writes `validation_qp_vs_python.pdf` to `~/.cache/quantipy/validation/`.
+- Demo config at `demo/config.yaml` enables a full end-to-end run with no GPU required.
 
 ## Slash commands available
 

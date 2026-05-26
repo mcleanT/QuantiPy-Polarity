@@ -18,22 +18,39 @@ See `docs/superpowers/plans/` for the phased roadmap.
 | 3 | TIF/ND2 ingest + Cellpose-SAM segmentation | ✅ Complete |
 | 4 | Migration front detection + visualization | ✅ Complete |
 | 5 | `quantipy run` orchestration + resume/atomic writes | ✅ Complete |
-| 6 | Demo bundle + validation + HTML report | 🔲 Planned |
+| 6 | Validation + Demo + Release | ✅ complete |
 | 7 | Interactive viewer + experimental analyses | 🔲 Planned |
 
-## Quickstart (Phase 5)
+## Quickstart
 
 ```bash
+# 1. Install
 pip install -e ".[dev,pipeline]"
-quantipy init-config --mode masks --output config.yaml
-quantipy run --config config.yaml --output ./results
-open ./results/report.html
+
+# 2. Download the demo bundle (~5 MB, synthetic cells)
+quantipy download-demo
+# → extracts to ~/.cache/quantipy/demo/
+
+# 3. Run the pipeline (masks mode, no GPU required)
+quantipy run --config ~/.cache/quantipy/demo/config.yaml --output ./demo_results
+
+# 4. Open the report
+open ./demo_results/report.html      # macOS
+xdg-open ./demo_results/report.html  # Linux
 ```
 
-`quantipy run` orchestrates all stages end-to-end and writes a self-contained
-`report.html`.  Re-running the same command on an existing results directory
-**resumes automatically** — only stages that have not yet completed are
-re-executed.
+For developers who have cloned the repo, the demo files are also available directly at `demo/`:
+
+```bash
+quantipy run --config demo/config.yaml --output ./demo_results
+```
+
+To regenerate the QP-vs-Python validation figure:
+
+```bash
+quantipy validate
+# → prints R², slope; writes validation_qp_vs_python.pdf to ~/.cache/quantipy/validation/
+```
 
 ### Pipeline resume
 
@@ -74,16 +91,6 @@ quantipy --help             # primary + advanced command groups
 quantipy init-config --mode masks --output config.yaml
 cat config.yaml             # mode: masks, valid Pydantic schema
 quantipy run                # stubbed: "not implemented in v0.1.0 Phase 1"
-```
-
-## Planned full quickstart (lands at Phase 6)
-
-```bash
-conda env create -f environment.yml && conda activate quantipy && pip install -e .
-quantipy download-demo
-quantipy init-config --mode masks --output config.yaml
-quantipy run --config config.yaml --output ./results
-open ./results/report.html
 ```
 
 ## Design + reviews
