@@ -32,7 +32,7 @@ def _make_per_cell(
 
     fov_ids = [f"fov{i:02d}" for i in range(n)]
     magnitudes = rng.uniform(0.1, 1.0, size=n)
-    df = pd.DataFrame({"fov_id": fov_ids, "qp_magnitude": magnitudes})
+    df = pd.DataFrame({"fov_id": fov_ids, "magnitude": magnitudes})
     per_cell_path = tmp_path / "per_cell.parquet"
     df.to_parquet(per_cell_path, index=False)
 
@@ -123,7 +123,7 @@ def test_fewer_than_two_groups_raises(tmp_path):
     """Only one condition value → ValueError."""
     rng = np.random.default_rng(1)
     fov_ids = [f"fov{i:02d}" for i in range(10)]
-    df = pd.DataFrame({"fov_id": fov_ids, "qp_magnitude": rng.uniform(0.1, 1.0, 10)})
+    df = pd.DataFrame({"fov_id": fov_ids, "magnitude": rng.uniform(0.1, 1.0, 10)})
     per_cell_path = tmp_path / "per_cell.parquet"
     df.to_parquet(per_cell_path, index=False)
 
@@ -140,7 +140,7 @@ def test_tsv_metadata_supported(tmp_path):
     rng = np.random.default_rng(2)
     n = 20
     fov_ids = [f"fov{i:02d}" for i in range(n)]
-    df = pd.DataFrame({"fov_id": fov_ids, "qp_magnitude": rng.uniform(0.1, 1.0, n)})
+    df = pd.DataFrame({"fov_id": fov_ids, "magnitude": rng.uniform(0.1, 1.0, n)})
     per_cell_path = tmp_path / "per_cell.parquet"
     df.to_parquet(per_cell_path, index=False)
 

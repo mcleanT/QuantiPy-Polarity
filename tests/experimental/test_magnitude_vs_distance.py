@@ -22,7 +22,7 @@ def _make_parquet(
     tmp_path: Path,
     n: int = 50,
     include_distance: bool = True,
-    magnitude_col: str = "qp_magnitude",
+    magnitude_col: str = "magnitude",
     distance_col: str = "dist_to_front_px",
 ) -> Path:
     """Write a synthetic per_cell.parquet and return its path."""

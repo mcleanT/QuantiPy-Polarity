@@ -30,8 +30,8 @@ def _write_minimal_results(results_dir: Path) -> Path:
         {
             "fov_id": ["fov_A", "fov_A", "fov_B"],
             "cell_id": [1, 2, 3],
-            "qp_magnitude": [0.5, 0.6, 0.7],
-            "qp_axis_deg": [10.0, 20.0, 30.0],
+            "magnitude": [0.5, 0.6, 0.7],
+            "axis_deg": [10.0, 20.0, 30.0],
         }
     )
     df.to_parquet(agg_dir / "per_cell.parquet", index=False)

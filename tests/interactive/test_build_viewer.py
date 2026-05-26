@@ -54,8 +54,8 @@ def results_dir(tmp_path: Path) -> Path:
         {
             "fov_id": ["fov_A", "fov_A", "fov_B"],
             "cell_id": [1, 2, 3],
-            "qp_magnitude": [0.3, 0.7, 0.5],
-            "qp_axis_deg": [45.0, 90.0, 120.0],
+            "magnitude": [0.3, 0.7, 0.5],
+            "axis_deg": [45.0, 90.0, 120.0],
             "centroid_x": [100.0, 200.0, 150.0],
             "centroid_y": [100.0, 200.0, 150.0],
         }
@@ -128,8 +128,8 @@ def test_html_no_image_placeholder(tmp_path: Path) -> None:
         {
             "fov_id": ["fov_X"],
             "cell_id": [1],
-            "qp_magnitude": [0.5],
-            "qp_axis_deg": [30.0],
+            "magnitude": [0.5],
+            "axis_deg": [30.0],
             "centroid_x": [50.0],
             "centroid_y": [50.0],
         }
@@ -175,7 +175,7 @@ def test_build_viewer_empty_parquet_raises(tmp_path: Path) -> None:
     agg_dir = tmp_path / "05_aggregated"
     agg_dir.mkdir(parents=True)
     empty_df = pd.DataFrame(
-        columns=["fov_id", "cell_id", "qp_magnitude", "qp_axis_deg"]
+        columns=["fov_id", "cell_id", "magnitude", "axis_deg"]
     )
     empty_df.to_parquet(agg_dir / "per_cell.parquet", index=False)
     output_path = tmp_path / "viewer.html"
@@ -187,13 +187,13 @@ def test_build_viewer_missing_required_column_raises(tmp_path: Path) -> None:
     """build_viewer raises ValueError when a required column is absent."""
     agg_dir = tmp_path / "05_aggregated"
     agg_dir.mkdir(parents=True)
-    # Missing qp_axis_deg
+    # Missing axis_deg
     df = pd.DataFrame(
         {
             "fov_id": ["fov_A"],
             "cell_id": [1],
-            "qp_magnitude": [0.5],
-            # qp_axis_deg intentionally omitted
+            "magnitude": [0.5],
+            # axis_deg intentionally omitted
         }
     )
     df.to_parquet(agg_dir / "per_cell.parquet", index=False)

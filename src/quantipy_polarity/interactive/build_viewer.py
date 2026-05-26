@@ -12,7 +12,7 @@ import pandas as pd
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 _TEMPLATE_DIR = Path(__file__).parent / "templates"
-_REQUIRED_COLUMNS = {"fov_id", "cell_id", "qp_magnitude", "qp_axis_deg"}
+_REQUIRED_COLUMNS = {"fov_id", "cell_id", "magnitude", "axis_deg"}
 
 
 def _get_version() -> str:

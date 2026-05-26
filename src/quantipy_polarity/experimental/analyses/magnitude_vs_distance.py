@@ -20,7 +20,7 @@ def run_magnitude_vs_distance(
     per_cell_path: Path,
     output_dir: Path,
     *,
-    magnitude_col: str = "qp_magnitude",
+    magnitude_col: str = "magnitude",
     distance_col: str = "dist_to_front_px",
     max_cells: int = 5000,
 ) -> dict:

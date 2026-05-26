@@ -27,8 +27,8 @@ def _write_per_cell_parquet(path: Path, *, include_distance: bool = False) -> Pa
     data: dict = {
         "fov_id": [f"fov_{i % 4:02d}" for i in range(n)],
         "cell_id": list(range(n)),
-        "qp_magnitude": rng.uniform(0.1, 0.9, size=n).tolist(),
-        "qp_axis_deg": rng.uniform(0, 360, size=n).tolist(),
+        "magnitude": rng.uniform(0.1, 0.9, size=n).tolist(),
+        "axis_deg": rng.uniform(0, 360, size=n).tolist(),
     }
     if include_distance:
         data["dist_to_front_px"] = rng.uniform(0, 200, size=n).tolist()

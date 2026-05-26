@@ -20,7 +20,7 @@ def run_polarity_by_condition(
     output_dir: Path,
     *,
     condition_col: str = "condition",
-    magnitude_col: str = "qp_magnitude",
+    magnitude_col: str = "magnitude",
 ) -> dict:
     """Boxplot of polarity magnitude grouped by experimental condition.
 

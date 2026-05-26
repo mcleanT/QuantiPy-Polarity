@@ -52,7 +52,7 @@ def analyze_group() -> None:
 )
 @click.option(
     "--magnitude-col",
-    default="qp_magnitude",
+    default="magnitude",
     show_default=True,
     help="Column name in per_cell.parquet for polarity magnitude.",
 )
@@ -111,7 +111,7 @@ def polarity_by_condition_cmd(
 )
 @click.option(
     "--magnitude-col",
-    default="qp_magnitude",
+    default="magnitude",
     show_default=True,
     help="Column name for polarity magnitude.",
 )
