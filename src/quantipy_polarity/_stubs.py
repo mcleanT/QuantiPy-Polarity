@@ -35,14 +35,6 @@ _STUBS: dict[str, tuple[str, str]] = {
         "[Advanced] nd2/tif → normalized per-FOV TIFs",
         "Phase 2 (masks) / Phase 3 (tif/nd2)",
     ),
-    "front": (
-        "[Advanced] Migration-front detection (auto only in v0.1.0)",
-        "Phase 4 (migration front)",
-    ),
-    "plot": (
-        "[Advanced] Regenerate plots from aggregated parquet",
-        "Phase 4 (visualization)",
-    ),
     "report": (
         "[Advanced] Regenerate HTML report from a run dir",
         "Phase 5 (HTML report)",
