@@ -15,10 +15,6 @@ from quantipy_polarity.cli import main
 
 _STUBS: dict[str, tuple[str, str]] = {
     # name: (short_help, phase_pointer)
-    "run": (
-        "Single-shot: input → all outputs",
-        "Phase 5 (run orchestration + resume/atomic-writes)",
-    ),
     "download-demo": (
         "Pull demo bundle from latest GitHub Release",
         "Phase 6 (demo bundle + Release workflow)",
@@ -30,14 +26,6 @@ _STUBS: dict[str, tuple[str, str]] = {
     "validate": (
         "Regenerate QP-vs-Python comparison figure",
         "Phase 6 (validation + provenance)",
-    ),
-    "ingest": (
-        "[Advanced] nd2/tif → normalized per-FOV TIFs",
-        "Phase 2 (masks) / Phase 3 (tif/nd2)",
-    ),
-    "report": (
-        "[Advanced] Regenerate HTML report from a run dir",
-        "Phase 5 (HTML report)",
     ),
     "analyze": (
         "[Advanced] Run a curated experimental analysis by name",
