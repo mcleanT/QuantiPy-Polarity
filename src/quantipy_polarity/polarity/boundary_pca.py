@@ -38,7 +38,7 @@ Angle convention (fallback)
 #
 # Magnitude calibration
 #   Python skeleton-mode magnitudes are consistently ~0.669× QP values
-#   (OLS slope: C10 = 0.6620, D11 = 0.6762; |Δslope| = 0.014).
+#   (OLS slope across two replicates: 0.6620, 0.6762; |Δslope| = 0.014).
 #   To convert Python output to QP-equivalent scale:
 #       py_mag_calibrated = py_mag / 0.669
 #   Apply ONLY when comparing to absolute QP magnitudes.
@@ -314,7 +314,7 @@ def compute_cell_polarity(
     Parameters
     ----------
     signal:
-        (H, W) float-castable array — the optoCelsr channel.
+        (H, W) float-castable array — the polarity marker / membrane channel.
     labels:
         (H, W) integer array — Cellpose / QP labels (0 = background).
     min_boundary_pixels:
