@@ -54,3 +54,19 @@ def test_init_config_rejects_invalid_mode() -> None:
         main, ["init-config", "--mode", "garbage", "--output", "x.yaml"]
     )
     assert result.exit_code != 0
+
+
+def test_init_config_tif_includes_tif_scheme(tmp_path: Path) -> None:
+    """TIF template must include tif_scheme and channel_suffix_template fields."""
+    runner = CliRunner()
+    out = tmp_path / "cfg_tif.yaml"
+    result = runner.invoke(main, ["init-config", "--mode", "tif", "--output", str(out)])
+    assert result.exit_code == 0, result.output
+    yaml_text = out.read_text()
+    assert "tif_scheme: stack" in yaml_text
+    assert "channel_suffix_template:" in yaml_text
+    # Ensure the config is still Pydantic-parseable
+    cfg = Config.from_yaml(out)
+    assert isinstance(cfg.input, InputTIF)
+    assert cfg.input.tif_scheme == "stack"
+    assert cfg.input.channel_suffix_template == "_ch{ch}"

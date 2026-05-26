@@ -44,6 +44,9 @@ def _build_config(mode: Literal["nd2", "tif", "masks"]) -> Config:
                 channel_membrane=0,
                 channel_segmentation=0,
                 pixel_size_um=0.65,
+                # stack = multi-page TIF (C,H,W); multifile = per-channel TIFs named <fov_id>_ch{N}.tif
+                tif_scheme="stack",
+                channel_suffix_template="_ch{ch}",  # only used for tif_scheme: multifile
             ),
         )
     return Config(
