@@ -62,3 +62,52 @@ def pair_masks_with_membranes(
             )
         paired.append((fov, mp, mask_index[fov]))
     return paired
+
+
+def pair_tifs_by_channel(
+    tif_dir: Path,
+    channel_membrane: int,
+    channel_segmentation: int | None = None,
+    *,
+    channel_suffix_template: str = "_ch{ch}",
+    ext: str = ".tif",
+) -> list[tuple[str, Path, Path | None]]:
+    """Pair per-channel TIF files by FOV ID.
+
+    Expects files named like `<fov_id>_ch0.tif`, `<fov_id>_ch1.tif` (or
+    whatever `channel_suffix_template` produces for the given channel indices).
+
+    Returns a sorted list of (fov_id, membrane_path, seg_path_or_None).
+    `seg_path_or_None` is None when channel_segmentation is None.
+
+    Raises FileNotFoundError if no membrane-channel files exist or if any
+    membrane file's segmentation-channel counterpart is missing.
+    """
+    membrane_suffix = channel_suffix_template.format(ch=channel_membrane)
+    mem_files = sorted(Path(tif_dir).glob(f"*{membrane_suffix}{ext}"))
+    if not mem_files:
+        raise FileNotFoundError(
+            f"No files matching '*{membrane_suffix}{ext}' in {tif_dir}"
+        )
+
+    result = []
+    for mp in mem_files:
+        # Derive fov_id: strip channel suffix from stem
+        stem = mp.stem  # e.g. "FOV_01_ch0"
+        if not stem.endswith(membrane_suffix.lstrip("_") if membrane_suffix.startswith("_") else membrane_suffix):
+            fov_id = fov_id_from_path(mp)
+        else:
+            fov_id = stem[: -len(membrane_suffix)]
+        if not fov_id:
+            fov_id = fov_id_from_path(mp)
+
+        seg_path: Path | None = None
+        if channel_segmentation is not None:
+            seg_suffix = channel_suffix_template.format(ch=channel_segmentation)
+            seg_path = mp.parent / f"{fov_id}{seg_suffix}{ext}"
+            if not seg_path.exists():
+                raise FileNotFoundError(
+                    f"Membrane file {mp.name} has no matching segmentation channel file {seg_path.name}"
+                )
+        result.append((fov_id, mp, seg_path))
+    return result
