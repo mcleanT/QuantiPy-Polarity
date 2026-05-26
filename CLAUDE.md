@@ -16,7 +16,8 @@ microscopy images. The `quantipy` command is installed by
 | `quantipy init-config --mode {nd2,tif,masks}` | implemented | Scaffold a config YAML |
 | `quantipy --version` / `--help` | implemented | CLI introspection |
 | `quantipy run` | stubbed (Phase 5) | Single-shot pipeline |
-| `quantipy ingest` / `segment` / `polarity` / `front` / `aggregate` / `plot` / `report` | stubbed (Phases 2–5) | Stage-resume commands |
+| `quantipy polarity` / `aggregate` | implemented (Phase 2) | Masks→per-cell→experiment parquet |
+| `quantipy ingest` / `segment` / `front` / `plot` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
 | `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
 | `quantipy validate` | stubbed (Phase 6) | QP-vs-Python figure regeneration |
 | `quantipy download-demo` | stubbed (Phase 6) | Pull demo bundle from Release |
@@ -27,6 +28,10 @@ microscopy images. The `quantipy` command is installed by
 - `src/quantipy_polarity/cli.py` — Click root, `_GroupedHelp` class
 - `src/quantipy_polarity/config.py` — Pydantic schema (input mode discriminator)
 - `src/quantipy_polarity/contracts.py` — `PerCellRow` schema, QC bit flags, coord conventions
+- `src/quantipy_polarity/polarity/boundary_pca.py` — Fourier-k=2 PCA polarity algorithm (lifted from research repo)
+- `src/quantipy_polarity/polarity/per_cell.py` — per-FOV → experiment parquet
+- `src/quantipy_polarity/io/masks.py` — paired (mask, membrane) FOV loader
+- `tests/fixtures/_build.py` + `synthetic_fov.npz` — ground-truth fixture
 - `docs/superpowers/specs/` — design spec + codex review
 - `docs/superpowers/plans/` — phased implementation plans
 - `tests/` — pytest suite

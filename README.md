@@ -12,7 +12,7 @@ subcommands stubbed for later phases. See `docs/superpowers/plans/` for the
 phased roadmap.
 
 - ✅ Phase 1 — CLI shell, config schema, init-config, fast-tier CI
-- ⏳ Phase 2 — Masks → polarity (smallest viable pipeline)
+- ✅ Phase 2 — Masks → polarity (smallest viable pipeline) — `quantipy polarity` + `quantipy aggregate`
 - ⏳ Phase 3 — TIF / ND2 ingest + Cellpose segmentation
 - ⏳ Phase 4 — Migration front + visualization
 - ⏳ Phase 5 — Run orchestration + HTML report + resume/atomic-writes
