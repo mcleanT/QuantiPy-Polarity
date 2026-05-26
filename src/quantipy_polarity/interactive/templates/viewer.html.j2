@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantiPy Polarity — Per-cell Viewer</title>
+<style>
+/* ── Reset + base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background: #f5f5f5; color: #222; }
+/* ── Header toolbar ── */
+#toolbar { display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+           background: #272727; color: #fff; }
+#toolbar h1 { font-size: 14px; font-weight: bold; }
+#toolbar select, #toolbar button { font-size: 12px; padding: 3px 8px; border-radius: 3px;
+                                    border: 1px solid #888; background: #fff; cursor: pointer; }
+#toolbar button:hover { background: #e0e0e0; }
+#version-badge { margin-left: auto; font-size: 11px; color: #aaa; }
+/* ── Main layout ── */
+#main { display: flex; height: calc(100vh - 80px); }
+/* ── FOV image panel ── */
+#fov-panel { flex: 1 1 55%; padding: 12px; overflow: hidden; display: flex;
+             flex-direction: column; background: #fff; border-right: 1px solid #ddd; }
+#fov-panel h2 { font-size: 12px; color: #555; margin-bottom: 6px; }
+#fov-img-container { flex: 1; overflow: hidden; }
+#fov-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+#fov-placeholder { color: #aaa; font-style: italic; padding: 16px; }
+/* ── Cell list panel ── */
+#cell-panel { flex: 0 0 220px; display: flex; flex-direction: column;
+              background: #fafafa; border-right: 1px solid #ddd; }
+#cell-panel h2 { font-size: 12px; color: #555; padding: 8px 10px; border-bottom: 1px solid #ddd; }
+#cell-list { flex: 1; overflow-y: auto; }
+.cell-row { padding: 5px 10px; cursor: pointer; border-bottom: 1px solid #eee;
+            font-size: 12px; white-space: nowrap; }
+.cell-row:hover { background: #e8f0fe; }
+.cell-row.selected { background: #c2d4f8; font-weight: bold; }
+/* ── Info panel ── */
+#info-panel { flex: 1 1 30%; padding: 12px; overflow-y: auto; background: #fff; }
+#info-panel h2 { font-size: 12px; color: #555; margin-bottom: 8px; }
+#info-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#info-table td { padding: 3px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+#info-table td:first-child { color: #555; width: 40%; word-break: break-word; }
+#info-table td:last-child  { font-family: monospace; }
+#no-selection-msg { color: #aaa; font-style: italic; }
+/* ── Status bar ── */
+#statusbar { height: 26px; line-height: 26px; padding: 0 16px; background: #272727;
+             color: #ccc; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ── -->
+<div id="toolbar">
+  <h1>QuantiPy Polarity — Per-cell Viewer</h1>
+  <select id="fov-select" onchange="switchFov(this.value)">
+    {% for fov_id in fovs %}
+    <option value="{{ fov_id }}">{{ fov_id }}</option>
+    {% endfor %}
+  </select>
+  <button onclick="navFov(-1)">&#8592; Prev FOV</button>
+  <button onclick="navFov(+1)">Next FOV &#8594;</button>
+  <span id="version-badge">v{{ version }}</span>
+</div>
+
+<!-- ── Main panels ── -->
+<div id="main">
+  <!-- FOV image -->
+  <div id="fov-panel">
+    <h2 id="fov-label">FOV: {{ fovs[0] if fovs else '' }}</h2>
+    <div id="fov-img-container">
+      {% if fovs %}
+      <img id="fov-img" src="" alt="Polarity map" />
+      <p id="fov-placeholder" style="display:none">No polarity map available for this FOV.</p>
+      {% else %}
+      <p id="fov-placeholder">No FOVs found in this results directory.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Cell list -->
+  <div id="cell-panel">
+    <h2>Cells (<span id="cell-count">0</span>)</h2>
+    <div id="cell-list"></div>
+  </div>
+
+  <!-- Info panel -->
+  <div id="info-panel">
+    <h2>Selected cell</h2>
+    <p id="no-selection-msg">Click a cell to inspect its parquet row.</p>
+    <table id="info-table" style="display:none">
+      <tbody id="info-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Status bar ── -->
+<div id="statusbar" id="statusbar">Ready. {{ fovs|length }} FOV(s) loaded.</div>
+
+<script>
+// ── Embedded data ──
+const ALL_CELLS = {{ cells_json | safe }};
+const FOV_IMAGES = {{ fov_images | tojson | safe }};
+const FOVS = {{ fovs | tojson | safe }};
+
+// ── State ──
+let currentFov = FOVS.length > 0 ? FOVS[0] : null;
+let selectedIdx = null;   // index into currentCells array
+let currentCells = [];
+
+// ── Init ──
+document.addEventListener("DOMContentLoaded", function() {
+  if (currentFov) switchFov(currentFov);
+  document.addEventListener("keydown", handleKey);
+});
+
+function switchFov(fovId) {
+  currentFov = fovId;
+  selectedIdx = null;
+
+  // Update dropdown
+  const sel = document.getElementById("fov-select");
+  sel.value = fovId;
+
+  // Update label
+  document.getElementById("fov-label").textContent = "FOV: " + fovId;
+
+  // Update image
+  const imgEl = document.getElementById("fov-img");
+  const placeholder = document.getElementById("fov-placeholder");
+  const b64 = FOV_IMAGES[fovId] || "";
+  if (b64) {
+    imgEl.src = "data:image/png;base64," + b64;
+    imgEl.style.display = "block";
+    if (placeholder) placeholder.style.display = "none";
+  } else {
+    if (imgEl) imgEl.style.display = "none";
+    if (placeholder) placeholder.style.display = "block";
+  }
+
+  // Filter cells for this FOV
+  currentCells = ALL_CELLS.filter(function(c) { return c.fov_id === fovId; });
+  renderCellList();
+  clearInfo();
+  setStatus("FOV: " + fovId + "  |  " + currentCells.length + " cell(s)");
+}
+
+function renderCellList() {
+  const container = document.getElementById("cell-list");
+  container.innerHTML = "";
+  document.getElementById("cell-count").textContent = currentCells.length;
+  currentCells.forEach(function(cell, i) {
+    const div = document.createElement("div");
+    div.className = "cell-row";
+    div.dataset.idx = i;
+    const mag = cell.qp_magnitude !== undefined ? cell.qp_magnitude.toFixed(3) : "?";
+    const ax  = cell.qp_axis_deg  !== undefined ? cell.qp_axis_deg.toFixed(1)  : "?";
+    div.textContent = "cell " + (cell.cell_id !== undefined ? cell.cell_id : i)
+                     + "  mag=" + mag + "  ax=" + ax + "°";
+    div.addEventListener("click", function() { selectCell(i); });
+    container.appendChild(div);
+  });
+}
+
+function selectCell(idx) {
+  // Deselect previous
+  if (selectedIdx !== null) {
+    const prev = document.querySelector(".cell-row.selected");
+    if (prev) prev.classList.remove("selected");
+  }
+  selectedIdx = idx;
+  const rows = document.querySelectorAll(".cell-row");
+  if (rows[idx]) rows[idx].classList.add("selected");
+  showInfo(currentCells[idx]);
+  setStatus("Selected: cell_id=" + (currentCells[idx].cell_id ?? idx));
+}
+
+function showInfo(cell) {
+  document.getElementById("no-selection-msg").style.display = "none";
+  const table = document.getElementById("info-table");
+  table.style.display = "table";
+  const tbody = document.getElementById("info-tbody");
+  tbody.innerHTML = "";
+  Object.entries(cell).forEach(function([k, v]) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td"); td1.textContent = k;
+    const td2 = document.createElement("td");
+    td2.textContent = (v === null || v === undefined) ? "—" :
+                       (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(4)) : String(v));
+    tr.appendChild(td1); tr.appendChild(td2);
+    tbody.appendChild(tr);
+  });
+}
+
+function clearInfo() {
+  document.getElementById("no-selection-msg").style.display = "block";
+  document.getElementById("info-table").style.display = "none";
+  document.getElementById("info-tbody").innerHTML = "";
+}
+
+function navFov(delta) {
+  const idx = FOVS.indexOf(currentFov);
+  const next = FOVS[(idx + delta + FOVS.length) % FOVS.length];
+  switchFov(next);
+}
+
+function handleKey(e) {
+  if (e.key === "ArrowLeft")  { navFov(-1); return; }
+  if (e.key === "ArrowRight") { navFov(+1); return; }
+  if (e.key === "ArrowDown" && currentCells.length > 0) {
+    const next = selectedIdx === null ? 0 : Math.min(selectedIdx + 1, currentCells.length - 1);
+    selectCell(next); return;
+  }
+  if (e.key === "ArrowUp" && selectedIdx !== null) {
+    selectCell(Math.max(selectedIdx - 1, 0)); return;
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById("statusbar").textContent = msg;
+}
+</script>
+</body>
+</html>
