@@ -83,3 +83,23 @@ class SegmentationResult(BaseModel):
     diameter_px: float | None
     min_size_px: int
     model: str
+
+
+class FrontResult(BaseModel):
+    """Per-FOV migration-front detection result.
+
+    front_y_um: mean y-coordinate of front pixels, in microns from image top.
+    front_angle_deg: orientation of the front polyline in degrees [0, 180).
+        0° = horizontal front (cells migrate vertically).
+        Computed as the principal axis angle of front-pixel coordinates.
+        NaN when n_front_px == 0.
+    n_front_px: number of pixels classified as front.
+    front_mask_shape: (H, W) of the source label mask (for sanity checks).
+    """
+
+    fov_id: str
+    front_y_um: float | None = None
+    front_angle_deg: float | None = None
+    n_front_px: int = Field(ge=0, default=0)
+    front_mask_shape: tuple[int, int] = (0, 0)
+    pixel_size_um: float = Field(gt=0, default=1.0)
