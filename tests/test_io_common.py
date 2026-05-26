@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from quantipy_polarity.io._common import (
+    _is_mask_file,
     fov_id_from_path,
     pair_masks_with_membranes,
     pair_tifs_by_channel,
@@ -108,3 +109,66 @@ def test_pair_tifs_by_channel_empty_dir_raises(tmp_path: Path) -> None:
     """Raises FileNotFoundError when no membrane-channel files exist."""
     with pytest.raises(FileNotFoundError):
         pair_tifs_by_channel(tmp_path, channel_membrane=0)
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for HIGH H2/H3: mask files in same dir as membranes
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "stem",
+    ["fov_A_mask", "fov_A_seg", "fov_A_segmentation", "fov_A_labels"],
+)
+def test_is_mask_file(stem: str) -> None:
+    """_is_mask_file returns True for known mask/seg suffixes."""
+    assert _is_mask_file(Path(f"{stem}.tif")) is True
+
+
+def test_is_mask_file_membrane_not_flagged() -> None:
+    """_is_mask_file returns False for regular membrane files."""
+    assert _is_mask_file(Path("fov_A_membrane.tif")) is False
+    assert _is_mask_file(Path("FOV_01.tif")) is False
+
+
+def test_pair_masks_demo_layout_same_dir(tmp_path: Path) -> None:
+    """Regression for HIGH H2/H3: when membranes and masks share the same
+    directory (demo layout), *_mask.tif files must be excluded from the
+    membrane scan so exactly N FOVs are returned, not 2N.
+    """
+    # Demo-style: fov_A_membrane.tif + fov_A_mask.tif in the same directory
+    for fov in ("fov_A", "fov_B"):
+        (tmp_path / f"{fov}_membrane.tif").write_bytes(b"")
+        (tmp_path / f"{fov}_mask.tif").write_bytes(b"")
+
+    # Both dirs point to the same location (demo config: path=demo, masks_dir=demo)
+    pairs = pair_masks_with_membranes(tmp_path, tmp_path)
+
+    # Must yield exactly 2 FOVs, not 4
+    assert len(pairs) == 2
+    fov_ids = {p[0] for p in pairs}
+    assert fov_ids == {"fov_A", "fov_B"}
+
+    # Confirm every membrane path is a _membrane file
+    for _, mem_path, mask_path in pairs:
+        assert "_membrane" in mem_path.stem
+        assert "_mask" in mask_path.stem
+
+
+def test_pair_masks_demo_layout_with_seg_variants(tmp_path: Path) -> None:
+    """_seg, _segmentation, _labels variants are also excluded from membrane scan."""
+    for suffix in ("_seg", "_segmentation", "_labels"):
+        (tmp_path / f"fov_C_membrane.tif").write_bytes(b"")
+        (tmp_path / f"fov_C{suffix}.tif").write_bytes(b"")
+
+        pairs = pair_masks_with_membranes(
+            tmp_path, tmp_path, mask_ext=".tif"
+        )
+        # Exactly 1 membrane-FOV pair
+        assert len(pairs) == 1, f"Expected 1 pair for suffix={suffix}, got {len(pairs)}"
+        fov_id, mem, msk = pairs[0]
+        assert "_membrane" in mem.stem
+
+        # Clean up for next iteration
+        for f in tmp_path.iterdir():
+            f.unlink()

@@ -11,6 +11,39 @@ from pathlib import Path
 
 _FOV_ID_RE = re.compile(r"(FOV[_-]?\d+)", re.IGNORECASE)
 
+# Suffixes that identify mask/segmentation files — excluded from membrane scanning.
+_MASK_SUFFIXES: tuple[str, ...] = ("_mask", "_seg", "_segmentation", "_labels")
+
+# Suffixes that identify membrane / raw-image files — excluded from mask scanning.
+_MEMBRANE_SUFFIXES: tuple[str, ...] = ("_membrane", "_mip")
+
+# Role suffixes stripped when normalising a stem to a FOV ID (no FOV_NNN regex match).
+# Includes membrane so both sides of a pair resolve to the same bare stem.
+_ROLE_SUFFIXES: tuple[str, ...] = (
+    "_membrane",
+    "_mask",
+    "_seg",
+    "_segmentation",
+    "_labels",
+    "_mip",
+    "_ch0",
+    "_ch1",
+    "_ch2",
+    "_ch3",
+)
+
+
+def _is_mask_file(path: Path) -> bool:
+    """Return True if the file stem ends with a known mask/segmentation suffix."""
+    stem = path.stem.lower()
+    return any(stem.endswith(s) for s in _MASK_SUFFIXES)
+
+
+def _is_membrane_file(path: Path) -> bool:
+    """Return True if the file stem ends with a known membrane/raw-image suffix."""
+    stem = path.stem.lower()
+    return any(stem.endswith(s) for s in _MEMBRANE_SUFFIXES)
+
 
 def fov_id_from_path(path: Path | str) -> str:
     """Extract an FOV identifier from a path.
@@ -31,7 +64,15 @@ def fov_id_from_path(path: Path | str) -> str:
         # Normalize: strip separator, re-join with single underscore
         digits = re.search(r"\d+", match).group(0)
         return f"FOV_{digits}"
-    return p.stem
+    # No FOV_NNN pattern — fall back to the stem but strip known role suffixes
+    # so that e.g. "fov_A_membrane" and "fov_A_mask" both resolve to "fov_A".
+    stem = p.stem
+    stem_lower = stem.lower()
+    for suffix in _ROLE_SUFFIXES:
+        if stem_lower.endswith(suffix):
+            stem = stem[: len(stem) - len(suffix)]
+            break
+    return stem or p.stem
 
 
 def pair_masks_with_membranes(
@@ -45,8 +86,12 @@ def pair_masks_with_membranes(
     Returns a sorted list of (fov_id, membrane_path, mask_path) tuples.
     Raises FileNotFoundError if a membrane TIF has no matching mask (or vice versa).
     """
-    membrane_files = sorted(Path(membrane_dir).glob(f"*{membrane_ext}"))
-    mask_files = sorted(Path(masks_dir).glob(f"*{mask_ext}"))
+    membrane_files = sorted(
+        p for p in Path(membrane_dir).glob(f"*{membrane_ext}") if not _is_mask_file(p)
+    )
+    mask_files = sorted(
+        p for p in Path(masks_dir).glob(f"*{mask_ext}") if not _is_membrane_file(p)
+    )
     if not membrane_files:
         raise FileNotFoundError(f"No {membrane_ext} files found in {membrane_dir}")
     if not mask_files:
