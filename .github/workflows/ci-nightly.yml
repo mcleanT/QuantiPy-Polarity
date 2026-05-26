@@ -1,0 +1,29 @@
+name: CI (nightly slow tier)
+
+on:
+  schedule:
+    - cron: "17 7 * * *"  # 07:17 UTC daily
+  workflow_dispatch: {}
+
+jobs:
+  nightly:
+    name: nightly stub (no slow tests until Phase 3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: pip install -e .[dev]
+
+      - name: Run fast suite (placeholder; Phase 3 adds segmentation tests here)
+        run: pytest -v
+        continue-on-error: true
+
+      - name: Notice
+        run: echo "Phase 3 will add Cellpose-SAM segmentation tests to this job."
