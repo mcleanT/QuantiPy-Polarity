@@ -1,9 +1,10 @@
-"""Phase 1 stubs for all subcommands not yet implemented.
+"""Stub command registry for quantipy subcommands not yet implemented.
 
-Each stub registers a Click command that exits with code 2 and a clear
-"not implemented in Phase 1" message pointing to the future phase.
-This lets `quantipy --help` show the full surface area immediately while
-keeping each phase's implementation scope bounded.
+``_STUBS`` is intentionally empty as of v0.1.0 — all Phase 1–7 subcommands
+have been replaced by real implementations.  The module is retained because
+``cli.py`` imports it as a side-effect import to register any future stubs;
+the ``_make_stub`` helper and the registration loop remain in place so that
+new stubs can be added here without touching ``cli.py``.
 """
 
 from __future__ import annotations
