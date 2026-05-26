@@ -12,6 +12,7 @@ Coordinate conventions:
   - Cell IDs: uint16, 0 reserved for background, FOV-unique not global.
   - FOV IDs: strings preserved from input filenames.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

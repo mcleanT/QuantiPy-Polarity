@@ -1,8 +1,8 @@
 """Unit tests for the Pydantic configuration schema."""
+
 from pathlib import Path
 
 import pytest
-import yaml
 
 from quantipy_polarity.config import (
     Config,

@@ -1,4 +1,5 @@
 """Tests for `quantipy init-config`."""
+
 from pathlib import Path
 
 import pytest
@@ -12,7 +13,9 @@ from quantipy_polarity.config import Config, InputMasks, InputND2, InputTIF
     "mode,expected_cls",
     [("masks", InputMasks), ("nd2", InputND2), ("tif", InputTIF)],
 )
-def test_init_config_writes_valid_yaml(tmp_path: Path, mode: str, expected_cls: type) -> None:
+def test_init_config_writes_valid_yaml(
+    tmp_path: Path, mode: str, expected_cls: type
+) -> None:
     runner = CliRunner()
     out = tmp_path / f"cfg_{mode}.yaml"
     result = runner.invoke(main, ["init-config", "--mode", mode, "--output", str(out)])
@@ -26,7 +29,9 @@ def test_init_config_refuses_overwrite(tmp_path: Path) -> None:
     runner = CliRunner()
     out = tmp_path / "cfg.yaml"
     out.write_text("placeholder")
-    result = runner.invoke(main, ["init-config", "--mode", "masks", "--output", str(out)])
+    result = runner.invoke(
+        main, ["init-config", "--mode", "masks", "--output", str(out)]
+    )
     assert result.exit_code != 0
     assert "already exists" in result.output
 
@@ -35,7 +40,9 @@ def test_init_config_force_overwrites(tmp_path: Path) -> None:
     runner = CliRunner()
     out = tmp_path / "cfg.yaml"
     out.write_text("placeholder")
-    result = runner.invoke(main, ["init-config", "--mode", "masks", "--output", str(out), "--force"])
+    result = runner.invoke(
+        main, ["init-config", "--mode", "masks", "--output", str(out), "--force"]
+    )
     assert result.exit_code == 0
     cfg = Config.from_yaml(out)
     assert isinstance(cfg.input, InputMasks)
@@ -43,5 +50,7 @@ def test_init_config_force_overwrites(tmp_path: Path) -> None:
 
 def test_init_config_rejects_invalid_mode() -> None:
     runner = CliRunner()
-    result = runner.invoke(main, ["init-config", "--mode", "garbage", "--output", "x.yaml"])
+    result = runner.invoke(
+        main, ["init-config", "--mode", "garbage", "--output", "x.yaml"]
+    )
     assert result.exit_code != 0

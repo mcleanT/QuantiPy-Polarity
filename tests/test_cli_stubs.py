@@ -1,4 +1,5 @@
 """Tests for the Phase 1 stub subcommands."""
+
 import pytest
 from click.testing import CliRunner
 

@@ -5,6 +5,7 @@ Each stub registers a Click command that exits with code 2 and a clear
 This lets `quantipy --help` show the full surface area immediately while
 keeping each phase's implementation scope bounded.
 """
+
 from __future__ import annotations
 
 import click

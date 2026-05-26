@@ -6,6 +6,7 @@ Two command groups visible in --help:
   Advanced commands (for stage-resume / debugging): ingest, segment, polarity,
     front, aggregate, plot, report, analyze
 """
+
 from __future__ import annotations
 
 import click
@@ -24,7 +25,9 @@ class _GroupedHelp(click.Group):
         "validate",
     )
 
-    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+    def format_commands(
+        self, ctx: click.Context, formatter: click.HelpFormatter
+    ) -> None:
         commands = []
         for name in self.list_commands(ctx):
             cmd = self.get_command(ctx, name)
@@ -33,7 +36,10 @@ class _GroupedHelp(click.Group):
             commands.append((name, cmd))
         primary = [(n, c) for n, c in commands if n in self.PRIMARY]
         advanced = [(n, c) for n, c in commands if n not in self.PRIMARY]
-        for label, rows in (("Primary commands", primary), ("Advanced commands", advanced)):
+        for label, rows in (
+            ("Primary commands", primary),
+            ("Advanced commands", advanced),
+        ):
             if not rows:
                 continue
             with formatter.section(label):

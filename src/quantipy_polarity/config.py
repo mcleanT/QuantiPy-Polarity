@@ -3,6 +3,7 @@
 Single YAML drives every command. The `input.mode` field is a discriminator
 controlling which subset of input.* fields are required (nd2 / tif / masks).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,7 +38,9 @@ class InputND2(_InputCommon):
         if self.substack_range is not None:
             lo, hi = self.substack_range
             if lo >= hi:
-                raise ValueError(f"substack_range[0] must be < substack_range[1]; got {self.substack_range}")
+                raise ValueError(
+                    f"substack_range[0] must be < substack_range[1]; got {self.substack_range}"
+                )
         return self
 
 

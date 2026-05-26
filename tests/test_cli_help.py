@@ -1,4 +1,5 @@
 """Tests for the top-level `quantipy --help` and `--version`."""
+
 from click.testing import CliRunner
 
 from quantipy_polarity import __version__
@@ -30,7 +31,16 @@ def test_help_lists_primary_commands() -> None:
 def test_help_lists_advanced_commands() -> None:
     runner = CliRunner()
     result = runner.invoke(main, ["--help"])
-    for cmd in ("ingest", "segment", "polarity", "front", "aggregate", "plot", "report", "analyze"):
+    for cmd in (
+        "ingest",
+        "segment",
+        "polarity",
+        "front",
+        "aggregate",
+        "plot",
+        "report",
+        "analyze",
+    ):
         assert cmd in result.output
 
 

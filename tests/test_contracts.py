@@ -1,4 +1,5 @@
 """Unit tests for the stable data contracts."""
+
 import pytest
 
 from quantipy_polarity.contracts import (

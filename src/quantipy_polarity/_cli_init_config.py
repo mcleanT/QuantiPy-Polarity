@@ -2,6 +2,7 @@
 
 Registers itself on import (see cli.py footer).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
