@@ -38,7 +38,7 @@ def _find_validation_data_dir() -> Path:
         )
     # 2. Repo-relative path (editable dev install)
     candidate = (
-        Path(__file__).resolve().parent.parent.parent.parent / "data" / "validation"
+        Path(__file__).resolve().parent.parent.parent / "data" / "validation"
     )
     if candidate.is_dir() and (candidate / "qp_results.parquet").exists():
         return candidate
