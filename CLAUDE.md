@@ -22,10 +22,10 @@ microscopy images. The `quantipy` command is installed by
 | `quantipy plot` | implemented (Phase 4) | Regenerate all figures (vector maps, roses, overlays, summary) from existing parquet |
 | `quantipy ingest` | implemented (Phase 5) | nd2/tif → normalized per-FOV TIFs |
 | `quantipy report` | implemented (Phase 5) | Regenerate self-contained HTML report |
-| `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
+| `quantipy debug` | implemented (Phase 7) | Read-only per-cell viewer |
 | `quantipy validate` | implemented (Phase 6) | QP-vs-Python figure regeneration |
 | `quantipy download-demo` | implemented (Phase 6) | Pull demo bundle from Release |
-| `quantipy analyze <name>` | stubbed (Phase 7) | Experimental analyses |
+| `quantipy analyze <name>` | implemented (Phase 7) | Experimental analyses (`magnitude-vs-distance`, `polarity-by-condition`) |
 
 ## Where things live
 
@@ -61,7 +61,7 @@ schema, coord conventions, axial angle range) that downstream phases depend on.
 | 4 | Migration front detection + visualization | ✅ implemented |
 | 5 | `quantipy run` orchestration + resume/atomic writes | ✅ implemented |
 | 6 | Validation + Demo + Release | ✅ implemented |
-| 7 | Interactive viewer + experimental analyses | 🔲 planned |
+| 7 | Interactive viewer + experimental analyses | ✅ implemented |
 
 ### Phase 6 summary
 
