@@ -64,3 +64,5 @@ from quantipy_polarity import _cli_figures as _cli_figures  # noqa: E402,F401
 from quantipy_polarity import _cli_ingest as _cli_ingest  # noqa: E402,F401
 from quantipy_polarity import _cli_run as _cli_run  # noqa: E402,F401
 from quantipy_polarity import _cli_report as _cli_report  # noqa: E402,F401
+from quantipy_polarity import _cli_validate as _cli_validate          # noqa: E402,F401
+from quantipy_polarity import _cli_download_demo as _cli_download_demo  # noqa: E402,F401

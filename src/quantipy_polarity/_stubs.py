@@ -15,17 +15,9 @@ from quantipy_polarity.cli import main
 
 _STUBS: dict[str, tuple[str, str]] = {
     # name: (short_help, phase_pointer)
-    "download-demo": (
-        "Pull demo bundle from latest GitHub Release",
-        "Phase 6 (demo bundle + Release workflow)",
-    ),
     "debug": (
         "Open the read-only per-cell viewer",
         "Phase 7 (interactive viewer)",
-    ),
-    "validate": (
-        "Regenerate QP-vs-Python comparison figure",
-        "Phase 6 (validation + provenance)",
     ),
     "analyze": (
         "[Advanced] Run a curated experimental analysis by name",
