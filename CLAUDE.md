@@ -18,7 +18,9 @@ microscopy images. The `quantipy` command is installed by
 | `quantipy run` | stubbed (Phase 5) | Single-shot pipeline |
 | `quantipy polarity` / `aggregate` | implemented (Phase 2) | Masks→per-cell→experiment parquet |
 | `quantipy segment` | implemented (Phase 3) | TIF/ND2 → Cellpose-SAM → label masks |
-| `quantipy ingest` / `front` / `plot` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
+| `quantipy front` | implemented (Phase 4) | Migration-front detection; writes `04_migration/front_um_per_fov.parquet` + QC PNGs |
+| `quantipy plot` | implemented (Phase 4) | Regenerate all figures (vector maps, roses, overlays, summary) from existing parquet |
+| `quantipy ingest` / `report` | stubbed (Phases 3–5) | Stage-resume commands |
 | `quantipy debug` | stubbed (Phase 7) | Read-only per-cell viewer |
 | `quantipy validate` | stubbed (Phase 6) | QP-vs-Python figure regeneration |
 | `quantipy download-demo` | stubbed (Phase 6) | Pull demo bundle from Release |

@@ -11,14 +11,15 @@ This repository now installs and exposes the full CLI surface, with most
 subcommands stubbed for later phases. See `docs/superpowers/plans/` for the
 phased roadmap.
 
-- ✅ Phase 1 — CLI shell, config schema, init-config, fast-tier CI
-- ✅ Phase 2 — Masks → polarity (smallest viable pipeline) — `quantipy polarity` + `quantipy aggregate`
-- ✅ Phase 3 — TIF / ND2 ingest + Cellpose-SAM segmentation
-- ⏳ Phase 4 — Migration front + visualization
-- ⏳ Phase 5 — Run orchestration + HTML report + resume/atomic-writes
-- ⏳ Phase 6 — Validation + demo bundle + GitHub Release
-- ⏳ Phase 7 — Interactive viewer + experimental analyses + docs
-- ⏳ Phase 8 — Research-dir upstream migration
+| Phase | Scope | Status |
+|-------|-------|--------|
+| 1 | CLI scaffold, Pydantic config | ✅ Complete |
+| 2 | Masks → polarity pipeline | ✅ Complete |
+| 3 | TIF/ND2 ingest + Cellpose-SAM segmentation | ✅ Complete |
+| 4 | Migration front detection + visualization | ✅ Complete |
+| 5 | `quantipy run` orchestration + resume/atomic writes | 🔲 Planned |
+| 6 | Demo bundle + validation + HTML report | 🔲 Planned |
+| 7 | Interactive viewer + experimental analyses | 🔲 Planned |
 
 ## Install (Phase 1 — CLI only)
 
