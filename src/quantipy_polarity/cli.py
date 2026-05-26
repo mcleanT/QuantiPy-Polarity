@@ -58,3 +58,4 @@ def main() -> None:
 from quantipy_polarity import _stubs as _stubs  # noqa: E402,F401
 from quantipy_polarity import _cli_init_config as _cli_init_config  # noqa: E402,F401
 from quantipy_polarity import _cli_polarity as _cli_polarity  # noqa: E402,F401
+from quantipy_polarity import _cli_segment as _cli_segment  # noqa: E402,F401

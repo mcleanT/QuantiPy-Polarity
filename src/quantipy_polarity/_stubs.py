@@ -35,10 +35,6 @@ _STUBS: dict[str, tuple[str, str]] = {
         "[Advanced] nd2/tif → normalized per-FOV TIFs",
         "Phase 2 (masks) / Phase 3 (tif/nd2)",
     ),
-    "segment": (
-        "[Advanced] Cellpose-SAM → label masks",
-        "Phase 3 (segmentation)",
-    ),
     "front": (
         "[Advanced] Migration-front detection (auto only in v0.1.0)",
         "Phase 4 (migration front)",
