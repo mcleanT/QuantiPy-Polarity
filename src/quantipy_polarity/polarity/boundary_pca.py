@@ -75,6 +75,7 @@ _CROP_PAD: int = 2
 # Skeleton-aware (Fourier k=2) path
 # ---------------------------------------------------------------------------
 
+
 def _fourier2_one_cell(
     signal: np.ndarray,
     labels: np.ndarray,
@@ -114,16 +115,18 @@ def _fourier2_one_cell(
     # Expand bounding box to catch skeleton pixels just outside the tight bbox
     r_start = max(0, r_off - crop_pad)
     c_start = max(0, c_off - crop_pad)
-    r_end   = min(labels.shape[0], sl[0].stop + crop_pad)
-    c_end   = min(labels.shape[1], sl[1].stop + crop_pad)
+    r_end = min(labels.shape[0], sl[0].stop + crop_pad)
+    c_end = min(labels.shape[1], sl[1].stop + crop_pad)
 
-    cell_mask_exp = (labels[r_start:r_end, c_start:c_end] == label_val)
-    skel_crop     = skeleton[r_start:r_end, c_start:c_end]
+    cell_mask_exp = labels[r_start:r_end, c_start:c_end] == label_val
+    skel_crop = skeleton[r_start:r_end, c_start:c_end]
 
     # Dilation of cell mask → intersect with skeleton
-    struct   = np.ones((3, 3), dtype=bool)
-    dilated  = binary_dilation(cell_mask_exp, structure=struct, iterations=dilation_iterations)
-    skel_adj = dilated & skel_crop & ~cell_mask_exp   # strictly outside cell
+    struct = np.ones((3, 3), dtype=bool)
+    dilated = binary_dilation(
+        cell_mask_exp, structure=struct, iterations=dilation_iterations
+    )
+    skel_adj = dilated & skel_crop & ~cell_mask_exp  # strictly outside cell
 
     rows_s, cols_s = np.nonzero(skel_adj)
     n_skel = len(rows_s)
@@ -139,7 +142,7 @@ def _fourier2_one_cell(
     rows_local = rows_s + r_start - r_off
     cols_local = cols_s + c_start - c_off
 
-    I   = signal[rows_full, cols_full].astype(np.float64)
+    I = signal[rows_full, cols_full].astype(np.float64)  # noqa: E741
     S_w = I.sum()
 
     if S_w <= 0.0:
@@ -148,27 +151,28 @@ def _fourier2_one_cell(
             "PCA Magnitude": float("nan"),
             "PCA Angle (°)": float("nan"),
             "n_boundary_px": n_skel,
-            "intensity_sum":  float(S_w),
+            "intensity_sum": float(S_w),
         }
 
     # Geometric centroid of cell interior (tight bbox)
-    cell_mask_orig = (labels[sl] == label_val)
+    cell_mask_orig = labels[sl] == label_val
     rows_int, cols_int = np.nonzero(cell_mask_orig)
-    c_r = float(rows_int.mean())   # row centroid (in bbox coords)
-    c_c = float(cols_int.mean())   # col centroid (in bbox coords)
+    c_r = float(rows_int.mean())  # row centroid (in bbox coords)
+    c_c = float(cols_int.mean())  # col centroid (in bbox coords)
 
     # Angles from centroid to each skeleton-adjacent pixel
-    phi = np.arctan2(rows_local.astype(np.float64) - c_r,
-                     cols_local.astype(np.float64) - c_c)
+    phi = np.arctan2(
+        rows_local.astype(np.float64) - c_r, cols_local.astype(np.float64) - c_c
+    )
 
     # Fourier k=2 coefficient
     dI = I - I.mean()
-    z2  = np.sum(dI * np.exp(2j * phi)) / S_w
+    z2 = np.sum(dI * np.exp(2j * phi)) / S_w
 
     magnitude = float(np.abs(z2))
 
     # Axial angle: convert complex phase to direction, halve, wrap to [−90, 90]
-    theta_deg   = np.degrees(np.arctan2(-z2.imag, z2.real)) / 2.0
+    theta_deg = np.degrees(np.arctan2(-z2.imag, z2.real)) / 2.0
     theta_axial = ((theta_deg + 90.0) % 180.0) - 90.0
 
     return {
@@ -176,13 +180,14 @@ def _fourier2_one_cell(
         "PCA Magnitude": magnitude,
         "PCA Angle (°)": float(theta_axial),
         "n_boundary_px": n_skel,
-        "intensity_sum":  float(S_w),
+        "intensity_sum": float(S_w),
     }
 
 
 # ---------------------------------------------------------------------------
 # Fallback PCA path (no skeleton)
 # ---------------------------------------------------------------------------
+
 
 def _pca_one_cell(
     signal: np.ndarray,
@@ -219,7 +224,9 @@ def _pca_one_cell(
     # bounding box, so cells touching the crop edge have no background neighbour and
     # find_boundaries returns zero pixels.  Pad the crop by 1 pixel on all sides with
     # zeros (background) so border-touching cells are handled correctly.
-    cell_mask_padded = np.pad(cell_mask, pad_width=1, mode="constant", constant_values=False)
+    cell_mask_padded = np.pad(
+        cell_mask, pad_width=1, mode="constant", constant_values=False
+    )
     bnd_padded = find_boundaries(cell_mask_padded, mode="inner")
     # Unpad to restore crop coordinates
     bnd_crop = bnd_padded[1:-1, 1:-1]
@@ -237,7 +244,7 @@ def _pca_one_cell(
     rows = rows_crop.astype(np.float64) + r_offset
     cols = cols_crop.astype(np.float64) + c_offset
 
-    I = signal[rows_crop + r_offset, cols_crop + c_offset].astype(np.float64)
+    I = signal[rows_crop + r_offset, cols_crop + c_offset].astype(np.float64)  # noqa: E741
     Sw = I.sum()
 
     if Sw <= 0.0:
@@ -293,6 +300,7 @@ def _pca_one_cell(
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def compute_cell_polarity(
     signal: np.ndarray,
@@ -359,20 +367,29 @@ def compute_cell_polarity(
 
         if skel_mask is not None:
             result = _fourier2_one_cell(
-                signal, labels, skel_mask, label_val, sl, min_boundary_pixels,
+                signal,
+                labels,
+                skel_mask,
+                label_val,
+                sl,
+                min_boundary_pixels,
                 dilation_iterations=dilation_iterations,
             )
         else:
-            result = _pca_one_cell(
-                signal, labels, label_val, sl, min_boundary_pixels
-            )
+            result = _pca_one_cell(signal, labels, label_val, sl, min_boundary_pixels)
 
         if result is not None:
             records.append(result)
 
     if not records:
         return pd.DataFrame(
-            columns=["Cell Identity", "PCA Magnitude", "PCA Angle (°)", "n_boundary_px", "intensity_sum"]
+            columns=[
+                "Cell Identity",
+                "PCA Magnitude",
+                "PCA Angle (°)",
+                "n_boundary_px",
+                "intensity_sum",
+            ]
         )
 
     df = pd.DataFrame(records)

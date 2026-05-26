@@ -6,6 +6,7 @@ Two operations:
     project to PER_CELL_COLUMNS, write atomically to disk.
   - `aggregate_experiment`: concatenate per-FOV parquets into one experiment-wide parquet.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

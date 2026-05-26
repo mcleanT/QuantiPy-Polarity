@@ -7,12 +7,12 @@ from the cell centroid and theta_i is the seeded ground-truth axis.
 The resulting (label_mask, membrane, theta_ground_truth) tuple is the canonical
 test input for boundary_pca and the end-to-end Phase 2 pipeline.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import numpy as np
-from scipy.spatial import Voronoi
 
 
 def build_synthetic_fov(
@@ -97,11 +97,15 @@ def build_synthetic_fov(
             x1 = min(image_size, int(px + 2 * membrane_thickness) + 1)
             yyk = np.arange(y0, y1)[:, None]
             xxk = np.arange(x0, x1)[None, :]
-            kernel = np.exp(-((yyk - py) ** 2 + (xxk - px) ** 2) / (2 * membrane_thickness ** 2))
+            kernel = np.exp(
+                -((yyk - py) ** 2 + (xxk - px) ** 2) / (2 * membrane_thickness**2)
+            )
             membrane[y0:y1, x0:x1] = np.maximum(membrane[y0:y1, x0:x1], kernel * s)
 
     # 5. Additive Gaussian noise on top
-    membrane = membrane + rng.normal(0.0, noise_sigma, size=membrane.shape).astype(np.float32)
+    membrane = membrane + rng.normal(0.0, noise_sigma, size=membrane.shape).astype(
+        np.float32
+    )
     membrane = np.clip(membrane, 0.0, 1.0)
 
     return {
@@ -140,6 +144,7 @@ def load_synthetic_fov(npz_path: Path) -> dict:
 if __name__ == "__main__":
     # Allow `python tests/fixtures/_build.py tests/fixtures/synthetic_fov.npz`
     import sys
+
     out = Path(sys.argv[1])
     out.parent.mkdir(parents=True, exist_ok=True)
     save_synthetic_fov(out)

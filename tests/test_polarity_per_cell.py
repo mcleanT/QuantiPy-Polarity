@@ -1,4 +1,5 @@
 """Unit tests for polarity/per_cell.py."""
+
 from pathlib import Path
 
 import numpy as np

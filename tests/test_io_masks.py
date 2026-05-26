@@ -1,4 +1,5 @@
 """Unit tests for io/masks.py."""
+
 from pathlib import Path
 
 import numpy as np
@@ -73,7 +74,9 @@ def test_load_mask_fov_multichannel(tmp_path: Path) -> None:
     msk = np.ones((32, 32), dtype=np.uint16)
     tifffile.imwrite(mdir / "FOV_05.tif", mem)
     tifffile.imwrite(mskdir / "FOV_05.tif", msk)
-    fov = load_mask_fov(mdir / "FOV_05.tif", mskdir / "FOV_05.tif", "FOV_05", channel_membrane=1)
+    fov = load_mask_fov(
+        mdir / "FOV_05.tif", mskdir / "FOV_05.tif", "FOV_05", channel_membrane=1
+    )
     # All pixels in channel 1 are 12345 / 65535
     assert np.isclose(fov.membrane.max(), 12345 / 65535, atol=1e-4)
 
@@ -88,7 +91,9 @@ def test_load_mask_fov_invalid_channel(tmp_path: Path) -> None:
     tifffile.imwrite(mdir / "FOV_01.tif", mem)
     tifffile.imwrite(mskdir / "FOV_01.tif", msk)
     with pytest.raises(IndexError, match="channel 5"):
-        load_mask_fov(mdir / "FOV_01.tif", mskdir / "FOV_01.tif", "FOV_01", channel_membrane=5)
+        load_mask_fov(
+            mdir / "FOV_01.tif", mskdir / "FOV_01.tif", "FOV_01", channel_membrane=5
+        )
 
 
 def test_iter_mask_dataset(tmp_path: Path) -> None:

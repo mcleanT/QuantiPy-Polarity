@@ -2,6 +2,7 @@
 
 Registers on import (see cli.py footer).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,14 +16,30 @@ from quantipy_polarity.polarity.boundary_pca import compute_cell_polarity
 from quantipy_polarity.polarity.per_cell import aggregate_experiment, per_fov_to_parquet
 
 
-@main.command("polarity", short_help="Label masks + membrane → per-cell axes (per-FOV parquets)")
-@click.option("--config", "-c", type=click.Path(exists=True, path_type=Path), required=True,
-              help="Path to YAML config (input.mode must be 'masks' in Phase 2).")
-@click.option("--output", "-o", type=click.Path(path_type=Path), required=True,
-              help="Output directory (per-FOV parquets land in <output>/03_polarity/per_fov/).")
+@main.command(
+    "polarity", short_help="Label masks + membrane → per-cell axes (per-FOV parquets)"
+)
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to YAML config (input.mode must be 'masks' in Phase 2).",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    required=True,
+    help="Output directory (per-FOV parquets land in <output>/03_polarity/per_fov/).",
+)
 @click.option("--overwrite", is_flag=True, help="Overwrite existing per-FOV parquets.")
-@click.option("--condition", default=None, help="Optional condition label for all FOVs.")
-def polarity_cmd(config: Path, output: Path, overwrite: bool, condition: str | None) -> None:
+@click.option(
+    "--condition", default=None, help="Optional condition label for all FOVs."
+)
+def polarity_cmd(
+    config: Path, output: Path, overwrite: bool, condition: str | None
+) -> None:
     """Compute per-cell polarity for every paired FOV under the configured masks dir.
 
     In v0.1.0 only `input.mode = masks` is supported here. Other modes will land in Phase 3.
@@ -57,11 +74,24 @@ def polarity_cmd(config: Path, output: Path, overwrite: bool, condition: str | N
 
 
 @main.command("aggregate", short_help="Per-FOV parquets → experiment parquet")
-@click.option("--input", "-i", "input_dir", type=click.Path(exists=True, path_type=Path), required=True,
-              help="Directory containing per-FOV parquets (e.g. results/03_polarity/per_fov).")
-@click.option("--output", "-o", type=click.Path(path_type=Path), required=True,
-              help="Output path for the experiment-wide parquet.")
-@click.option("--overwrite", is_flag=True, help="Overwrite existing experiment parquet.")
+@click.option(
+    "--input",
+    "-i",
+    "input_dir",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Directory containing per-FOV parquets (e.g. results/03_polarity/per_fov).",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    required=True,
+    help="Output path for the experiment-wide parquet.",
+)
+@click.option(
+    "--overwrite", is_flag=True, help="Overwrite existing experiment parquet."
+)
 def aggregate_cmd(input_dir: Path, output: Path, overwrite: bool) -> None:
     """Concatenate every *.parquet in --input into a single experiment-wide parquet."""
     parquets = sorted(Path(input_dir).glob("*.parquet"))

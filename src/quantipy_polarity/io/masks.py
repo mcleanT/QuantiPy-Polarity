@@ -4,6 +4,7 @@ This is the entry point for the `masks` input mode in v0.1.0 — user provides
 a directory of label-mask TIFs paired with a directory of membrane TIFs, and
 this module yields (fov_id, label_mask, membrane) tuples ready for boundary-PCA.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,7 +32,9 @@ class MaskFOV:
                 f"membrane shape {self.membrane.shape}"
             )
         if self.label_mask.ndim != 2:
-            raise ValueError(f"{self.fov_id}: label_mask must be 2D, got ndim={self.label_mask.ndim}")
+            raise ValueError(
+                f"{self.fov_id}: label_mask must be 2D, got ndim={self.label_mask.ndim}"
+            )
         if self.label_mask.dtype not in (np.uint8, np.uint16, np.uint32):
             raise ValueError(
                 f"{self.fov_id}: label_mask dtype must be unsigned int, got {self.label_mask.dtype}"
@@ -59,7 +62,9 @@ def load_mask_fov(
             )
         membrane = membrane[..., channel_membrane]
     elif membrane.ndim != 2:
-        raise ValueError(f"{fov_id}: membrane TIF must be 2D or 3D (H,W,C); got ndim={membrane.ndim}")
+        raise ValueError(
+            f"{fov_id}: membrane TIF must be 2D or 3D (H,W,C); got ndim={membrane.ndim}"
+        )
 
     label_mask = tifffile.imread(mask_path)
     if label_mask.ndim != 2:

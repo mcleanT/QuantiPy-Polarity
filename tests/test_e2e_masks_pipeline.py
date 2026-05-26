@@ -4,6 +4,7 @@ Differs from test_polarity_pca_recovery.py: that one tests the algorithm directl
 this one drives the full CLI pipeline (config → polarity → aggregate → parquet schema
 + ground-truth sanity check) like a real user would.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -70,7 +71,9 @@ def test_e2e_masks_pipeline_writes_schema(synthetic_pipeline_inputs: dict) -> No
     per_fov_dir = synthetic_pipeline_inputs["output_dir"] / "03_polarity" / "per_fov"
     assert (per_fov_dir / "FOV_01.parquet").exists()
 
-    exp_parquet = synthetic_pipeline_inputs["output_dir"] / "05_aggregated" / "per_cell.parquet"
+    exp_parquet = (
+        synthetic_pipeline_inputs["output_dir"] / "05_aggregated" / "per_cell.parquet"
+    )
     agg = runner.invoke(
         main,
         [

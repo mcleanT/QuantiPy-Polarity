@@ -3,6 +3,7 @@
 Asserts that >= AXIS_PASS_FRACTION of cells recover their seeded ground-truth
 axial angle within AXIS_TOLERANCE_DEG.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,8 +19,10 @@ from tests.fixtures._build import load_synthetic_fov
 AXIS_COL = "PCA Angle (°)"
 MAG_COL = "PCA Magnitude"
 CELL_ID_COL = "Cell Identity"
-AXIS_TOLERANCE_DEG: float = 25.0   # widened from 12 deg: fixture cos(2*phi) modulation is coarser than pixel-exact
-AXIS_PASS_FRACTION: float = 0.75   # conservative; 80/80 cells checked, 60/80 (75%) recover within 25 deg
+AXIS_TOLERANCE_DEG: float = 25.0  # widened from 12 deg: fixture cos(2*phi) modulation is coarser than pixel-exact
+AXIS_PASS_FRACTION: float = (
+    0.75  # conservative; 80/80 cells checked, 60/80 (75%) recover within 25 deg
+)
 MIN_MAGNITUDE_FOR_AXIS_CHECK: float = 0.05
 
 
@@ -65,8 +68,12 @@ def test_recovers_seeded_axes(fixture_path: Path) -> None:
         if diff <= AXIS_TOLERANCE_DEG:
             n_pass += 1
 
-    print(f"n_pass={n_pass}, n_checked={n_checked}, pass_frac={n_pass/n_checked if n_checked else 0:.2%}")
-    assert n_checked >= 20, f"only {n_checked} cells passed the magnitude floor; fixture too noisy?"
+    print(
+        f"n_pass={n_pass}, n_checked={n_checked}, pass_frac={n_pass / n_checked if n_checked else 0:.2%}"
+    )
+    assert n_checked >= 20, (
+        f"only {n_checked} cells passed the magnitude floor; fixture too noisy?"
+    )
     pass_frac = n_pass / n_checked
     assert pass_frac >= AXIS_PASS_FRACTION, (
         f"ground-truth recovery: {n_pass}/{n_checked} = {pass_frac:.2%} "

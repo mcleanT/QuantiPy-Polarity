@@ -2,11 +2,11 @@
 
 The ground-truth recovery test lives in test_polarity_pca_recovery.py.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from quantipy_polarity.polarity.boundary_pca import compute_cell_polarity
 
@@ -47,7 +47,9 @@ def test_output_axis_is_axial_range() -> None:
     result = compute_cell_polarity(signal, labels)
     axes = result[AXIS_COL].to_numpy()
     # Accept either axial convention: [-90, 90] or [0, 180) or [0, 360)
-    assert all((-90.0 <= a <= 90.0) or (0.0 <= a < 360.0) for a in axes), f"axes out of expected range: {axes}"
+    assert all((-90.0 <= a <= 90.0) or (0.0 <= a < 360.0) for a in axes), (
+        f"axes out of expected range: {axes}"
+    )
 
 
 def test_dtype_preserved_membrane_float32() -> None:

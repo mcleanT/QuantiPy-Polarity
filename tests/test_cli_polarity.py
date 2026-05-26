@@ -1,11 +1,11 @@
 """Tests for `quantipy polarity` and `quantipy aggregate` end-to-end."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 import tifffile
 from click.testing import CliRunner
 
@@ -52,7 +52,9 @@ def test_polarity_command_produces_per_fov_parquet(tmp_path: Path) -> None:
     cfg_path = _write_config(tmp_path, mem_dir, mask_dir)
     output = tmp_path / "results"
     runner = CliRunner()
-    result = runner.invoke(main, ["polarity", "--config", str(cfg_path), "--output", str(output)])
+    result = runner.invoke(
+        main, ["polarity", "--config", str(cfg_path), "--output", str(output)]
+    )
     assert result.exit_code == 0, result.output
     out_parquet = output / "03_polarity" / "per_fov" / "FOV_01.parquet"
     assert out_parquet.exists()
@@ -73,10 +75,13 @@ def test_polarity_rejects_non_masks_mode(tmp_path: Path) -> None:
         }
     }
     import yaml
+
     cfg_path = tmp_path / "c.yaml"
     cfg_path.write_text(yaml.safe_dump(cfg_data))
     runner = CliRunner()
-    result = runner.invoke(main, ["polarity", "--config", str(cfg_path), "--output", str(tmp_path / "out")])
+    result = runner.invoke(
+        main, ["polarity", "--config", str(cfg_path), "--output", str(tmp_path / "out")]
+    )
     assert result.exit_code != 0
     assert "input.mode='masks'" in result.output or "only supports" in result.output
 
@@ -87,7 +92,9 @@ def test_aggregate_command_concatenates(tmp_path: Path) -> None:
     cfg_path = _write_config(tmp_path, mem_dir, mask_dir)
     output = tmp_path / "results"
     runner = CliRunner()
-    pol_result = runner.invoke(main, ["polarity", "--config", str(cfg_path), "--output", str(output)])
+    pol_result = runner.invoke(
+        main, ["polarity", "--config", str(cfg_path), "--output", str(output)]
+    )
     assert pol_result.exit_code == 0, pol_result.output
 
     agg_out = output / "05_aggregated" / "per_cell.parquet"
@@ -112,7 +119,14 @@ def test_aggregate_no_input_files(tmp_path: Path) -> None:
     (tmp_path / "empty").mkdir()
     runner = CliRunner()
     result = runner.invoke(
-        main, ["aggregate", "--input", str(tmp_path / "empty"), "--output", str(tmp_path / "x.parquet")]
+        main,
+        [
+            "aggregate",
+            "--input",
+            str(tmp_path / "empty"),
+            "--output",
+            str(tmp_path / "x.parquet"),
+        ],
     )
     assert result.exit_code != 0
     assert "No *.parquet" in result.output

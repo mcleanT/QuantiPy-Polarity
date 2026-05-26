@@ -1,4 +1,5 @@
 """Unit tests for io/_common.py utilities."""
+
 from pathlib import Path
 
 import pytest

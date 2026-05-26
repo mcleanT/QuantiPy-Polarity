@@ -2,6 +2,7 @@
 
 Functions here are private to the io package — not part of the public API.
 """
+
 from __future__ import annotations
 
 import re
