@@ -13,16 +13,18 @@ from quantipy_polarity.validation.synthetic_data import (
 
 def test_schema_qp():
     qp_df, _ = generate_validation_parquets()
-    assert set(["fov_id", "cell_id", "centroid_y", "centroid_x",
-                "qp_magnitude", "qp_axis_deg"]).issubset(qp_df.columns)
+    assert set(
+        ["fov_id", "cell_id", "centroid_y", "centroid_x", "qp_magnitude", "qp_axis_deg"]
+    ).issubset(qp_df.columns)
     assert len(qp_df) == 100  # 50 cells × 2 FOVs
     assert set(qp_df["fov_id"].unique()) == {"fov_A", "fov_B"}
 
 
 def test_schema_py():
     _, py_df = generate_validation_parquets()
-    assert set(["fov_id", "cell_id", "centroid_y", "centroid_x",
-                "py_magnitude", "py_axis_deg"]).issubset(py_df.columns)
+    assert set(
+        ["fov_id", "cell_id", "centroid_y", "centroid_x", "py_magnitude", "py_axis_deg"]
+    ).issubset(py_df.columns)
     assert len(py_df) == 100
 
 
@@ -47,7 +49,7 @@ def test_r2_property():
         on=["fov_id", "cell_id"],
     )
     r, _ = pearsonr(merged["qp_magnitude"], merged["py_magnitude"])
-    assert r ** 2 > 0.85, f"R² = {r**2:.4f} unexpectedly low"
+    assert r**2 > 0.85, f"R² = {r**2:.4f} unexpectedly low"
 
 
 def test_magnitude_range():

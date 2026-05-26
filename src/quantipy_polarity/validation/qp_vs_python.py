@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,6 +54,7 @@ _ORANGE = "#E28E2C"
 @dataclasses.dataclass(frozen=True)
 class ValidationResult:
     """Metrics from a QP-vs-Python paired comparison."""
+
     r2_magnitude: float
     slope_magnitude: float
     intercept_magnitude: float
@@ -91,22 +93,24 @@ def _match_cells(
             if dist > tolerance_px or py_i in used_py:
                 continue
             used_py.add(int(py_i))
-            rows.append({
-                "fov_id": fov_id,
-                "cell_id_qp": int(qp_fov.at[qp_i, "cell_id"]),
-                "cell_id_py": int(py_fov.at[int(py_i), "cell_id"]),
-                "qp_magnitude": float(qp_fov.at[qp_i, "qp_magnitude"]),
-                "qp_axis_deg": float(qp_fov.at[qp_i, "qp_axis_deg"]),
-                "py_magnitude": float(py_fov.at[int(py_i), "py_magnitude"]),
-                "py_axis_deg": float(py_fov.at[int(py_i), "py_axis_deg"]),
-            })
+            rows.append(
+                {
+                    "fov_id": fov_id,
+                    "cell_id_qp": int(qp_fov.at[qp_i, "cell_id"]),
+                    "cell_id_py": int(py_fov.at[int(py_i), "cell_id"]),
+                    "qp_magnitude": float(qp_fov.at[qp_i, "qp_magnitude"]),
+                    "qp_axis_deg": float(qp_fov.at[qp_i, "qp_axis_deg"]),
+                    "py_magnitude": float(py_fov.at[int(py_i), "py_magnitude"]),
+                    "py_axis_deg": float(py_fov.at[int(py_i), "py_axis_deg"]),
+                }
+            )
     return pd.DataFrame(rows)
 
 
 def _r2(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
     """Return (r², slope, intercept) from OLS linear regression."""
     result = linregress(x, y)
-    return float(result.rvalue ** 2), float(result.slope), float(result.intercept)
+    return float(result.rvalue**2), float(result.slope), float(result.intercept)
 
 
 def make_figure(matched: pd.DataFrame, output_dir: Path) -> tuple[Path, Path]:
@@ -121,16 +125,22 @@ def make_figure(matched: pd.DataFrame, output_dir: Path) -> tuple[Path, Path]:
             axes,
             [
                 (
-                    "qp_magnitude", "py_magnitude",
-                    "QP magnitude", "Python magnitude",
+                    "qp_magnitude",
+                    "py_magnitude",
+                    "QP magnitude",
+                    "Python magnitude",
                     "A  Magnitude correlation",
-                    0.0, 1.0,
+                    0.0,
+                    1.0,
                 ),
                 (
-                    "qp_axis_deg", "py_axis_deg",
-                    "QP axis (°)", "Python axis (°)",
+                    "qp_axis_deg",
+                    "py_axis_deg",
+                    "QP axis (°)",
+                    "Python axis (°)",
                     "B  Axis angle correlation",
-                    0.0, 180.0,
+                    0.0,
+                    180.0,
                 ),
             ],
         ):
@@ -139,8 +149,12 @@ def make_figure(matched: pd.DataFrame, output_dir: Path) -> tuple[Path, Path]:
             r2, slope, intercept = _r2(x, y)
             ax.scatter(x, y, s=6, alpha=0.6, color=_BLUE, linewidths=0, rasterized=True)
             ax.plot(
-                [ref_lo, ref_hi], [ref_lo, ref_hi],
-                "k--", lw=0.8, label="y = x", zorder=5,
+                [ref_lo, ref_hi],
+                [ref_lo, ref_hi],
+                "k--",
+                lw=0.8,
+                label="y = x",
+                zorder=5,
             )
             ax.set_xlim(ref_lo, ref_hi)
             ax.set_ylim(ref_lo, ref_hi)
@@ -148,16 +162,20 @@ def make_figure(matched: pd.DataFrame, output_dir: Path) -> tuple[Path, Path]:
             ax.set_ylabel(ylabel)
             ax.set_title(title)
             ax.text(
-                0.05, 0.92,
+                0.05,
+                0.92,
                 f"R² = {r2:.3f}\nslope = {slope:.3f}",
-                transform=ax.transAxes, fontsize=6, va="top",
+                transform=ax.transAxes,
+                fontsize=6,
+                va="top",
                 bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.8),
             )
             ax.legend(fontsize=6)
 
         fig.suptitle(
             f"QP vs Python polarity (n = {len(matched)} matched cells)",
-            fontsize=8, fontweight="bold",
+            fontsize=8,
+            fontweight="bold",
         )
 
         pdf_path = output_dir / "validation_qp_vs_python.pdf"
@@ -228,6 +246,7 @@ def run_validation(
 
     metrics_path = output_dir / "validation_metrics.json"
     import json
+
     metrics_path.write_text(
         json.dumps(dataclasses.asdict(result), indent=2), encoding="utf-8"
     )

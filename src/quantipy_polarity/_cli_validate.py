@@ -38,7 +38,9 @@ def _find_validation_data_dir() -> Path:
             f"QUANTIPY_VALIDATION_DIR={env!r} does not exist or is not a directory."
         )
     # 2. Repo-relative path (editable dev install)
-    candidate = Path(__file__).resolve().parent.parent.parent.parent / "data" / "validation"
+    candidate = (
+        Path(__file__).resolve().parent.parent.parent.parent / "data" / "validation"
+    )
     if candidate.is_dir() and (candidate / "qp_results.parquet").exists():
         return candidate
     raise click.ClickException(
@@ -53,14 +55,16 @@ def _find_validation_data_dir() -> Path:
 
 @main.command("validate")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     default=None,
     help="Directory to write validation_qp_vs_python.pdf/.png and metrics JSON. "
-         f"Defaults to {_DEFAULT_OUTPUT}.",
+    f"Defaults to {_DEFAULT_OUTPUT}.",
 )
 @click.option(
-    "--tolerance", "-t",
+    "--tolerance",
+    "-t",
     type=float,
     default=5.0,
     show_default=True,
@@ -77,8 +81,12 @@ def validate_cmd(output: Path | None, tolerance: float) -> None:
     result = run_validation(qp_path, py_path, output_dir, tolerance_px=tolerance)
 
     click.echo(f"\nValidation complete ({result.n_matched} matched cells):")
-    click.echo(f"  Magnitude  R² = {result.r2_magnitude:.4f}  slope = {result.slope_magnitude:.4f}")
-    click.echo(f"  Axis angle R² = {result.r2_angle:.4f}  slope = {result.slope_angle:.4f}")
+    click.echo(
+        f"  Magnitude  R² = {result.r2_magnitude:.4f}  slope = {result.slope_magnitude:.4f}"
+    )
+    click.echo(
+        f"  Axis angle R² = {result.r2_angle:.4f}  slope = {result.slope_angle:.4f}"
+    )
     click.echo(f"  Figures saved to {output_dir}")
 
     if result.r2_magnitude < 0.85:

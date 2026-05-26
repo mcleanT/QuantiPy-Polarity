@@ -94,12 +94,14 @@ def test_download_demo_network_failure(tmp_path):
         side_effect=req.exceptions.ConnectionError("no network"),
     ):
         runner = CliRunner()
-        result = runner.invoke(
-            download_demo_cmd, ["--output", str(tmp_path / "demo")]
-        )
+        result = runner.invoke(download_demo_cmd, ["--output", str(tmp_path / "demo")])
     assert result.exit_code != 0
     output = result.output + (result.exception.__str__() if result.exception else "")
-    assert "fallback" in result.output.lower() or "clone" in result.output.lower() or result.exit_code != 0
+    assert (
+        "fallback" in result.output.lower()
+        or "clone" in result.output.lower()
+        or result.exit_code != 0
+    )
 
 
 def test_download_demo_missing_asset(tmp_path):
@@ -116,9 +118,7 @@ def test_download_demo_missing_asset(tmp_path):
         return_value=release_resp,
     ):
         runner = CliRunner()
-        result = runner.invoke(
-            download_demo_cmd, ["--output", str(tmp_path / "demo")]
-        )
+        result = runner.invoke(download_demo_cmd, ["--output", str(tmp_path / "demo")])
     assert result.exit_code != 0
 
 

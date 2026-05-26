@@ -72,8 +72,11 @@ def _download_and_extract(url: str, output_dir: Path) -> None:
             total = int(resp.headers.get("content-length", 0)) or None
             with open(tmp_path, "wb") as f:
                 with tqdm(
-                    total=total, unit="B", unit_scale=True,
-                    desc="Downloading demo_bundle.zip", leave=False,
+                    total=total,
+                    unit="B",
+                    unit_scale=True,
+                    desc="Downloading demo_bundle.zip",
+                    leave=False,
                 ) as bar:
                     for chunk in resp.iter_content(chunk_size=_CHUNK):
                         f.write(chunk)
@@ -105,13 +108,15 @@ def _download_and_extract(url: str, output_dir: Path) -> None:
 
 @main.command("download-demo")
 @click.option(
-    "--output", "-o",
+    "--output",
+    "-o",
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     default=None,
     help=f"Destination directory. Defaults to {_DEFAULT_CACHE}.",
 )
 @click.option(
-    "--force", "-f",
+    "--force",
+    "-f",
     is_flag=True,
     default=False,
     help="Re-download even if demo already exists in destination.",
@@ -146,8 +151,7 @@ def download_demo_cmd(output: Path | None, force: bool) -> None:
     except Exception as exc:  # noqa: BLE001
         click.echo(
             f"Could not reach GitHub Releases API: {exc}\n"
-            f"Manual download: {_RELEASES_URL}"
-            + _fallback_msg(output_dir),
+            f"Manual download: {_RELEASES_URL}" + _fallback_msg(output_dir),
             err=True,
         )
         raise click.Abort() from None
@@ -156,8 +160,7 @@ def download_demo_cmd(output: Path | None, force: bool) -> None:
     if _ASSET_NAME not in assets:
         click.echo(
             f"Release {release.get('tag_name', '?')} does not contain {_ASSET_NAME!r}.\n"
-            f"Check {_RELEASES_URL} for available assets."
-            + _fallback_msg(output_dir),
+            f"Check {_RELEASES_URL} for available assets." + _fallback_msg(output_dir),
             err=True,
         )
         raise click.Abort() from None
@@ -179,6 +182,4 @@ def download_demo_cmd(output: Path | None, force: bool) -> None:
     config = output_dir / "config.yaml"
     click.echo(f"\nDemo ready in {output_dir}")
     if config.exists():
-        click.echo(
-            f"Run: quantipy run --config {config} --output ./demo_results"
-        )
+        click.echo(f"Run: quantipy run --config {config} --output ./demo_results")

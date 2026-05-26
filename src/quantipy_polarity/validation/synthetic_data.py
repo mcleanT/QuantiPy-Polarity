@@ -16,9 +16,9 @@ import pandas as pd
 
 _N_CELLS_PER_FOV = 50
 _FOVS = ("fov_A", "fov_B")
-_GRID_SPACING = 48.0   # px — 10×10 grid in 512 px image with margin
+_GRID_SPACING = 48.0  # px — 10×10 grid in 512 px image with margin
 _MAG_SIGMA = 0.03
-_ANG_SIGMA = 2.0        # degrees
+_ANG_SIGMA = 2.0  # degrees
 
 
 def generate_validation_parquets(seed: int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -67,6 +67,7 @@ def write_validation_parquets(out_dir: Path | str, seed: int = 42) -> None:
 
 if __name__ == "__main__":
     import sys
+
     dest = sys.argv[1] if len(sys.argv) > 1 else "data/validation"
     write_validation_parquets(dest)
     print(f"Wrote validation parquets to {dest}/")
