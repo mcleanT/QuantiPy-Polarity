@@ -161,44 +161,6 @@ def _run_segment(cfg: Config, out_dir: Path, *, gpu: bool) -> None:
 
 
 def _build_fov_iterator(cfg: Config):
-    """Return an iterable of TIFFOV or ND2FOV objects based on input.mode."""
-    from quantipy_polarity import config as _config_mod
-
-    input_cfg = cfg.input
-
-    if input_cfg.mode == "tif":
-        from quantipy_polarity.io.tif import iter_tif_dataset
-
-        return iter_tif_dataset(
-            tif_dir=input_cfg.path,
-            channel_membrane=input_cfg.channel_membrane,
-            channel_segmentation=input_cfg.channel_segmentation,
-            pixel_size_um=input_cfg.pixel_size_um,
-            scheme=getattr(input_cfg, "tif_scheme", "stack"),
-            channel_suffix_template=getattr(
-                input_cfg, "channel_suffix_template", "_ch{ch}"
-            ),
-        )
-    elif input_cfg.mode == "nd2":
-        from quantipy_polarity.io.nd2 import iter_nd2_dataset
-
-        # nd2 mode: iterate all .nd2 files in path
-        nd2_files = sorted(Path(input_cfg.path).glob("*.nd2"))
-        if not nd2_files:
-            raise click.ClickException(f"No .nd2 files found in {input_cfg.path}")
-
-        def _nd2_gen():
-            for nd2_path in nd2_files:
-                yield from iter_nd2_dataset(
-                    nd2_path=nd2_path,
-                    channel_membrane=input_cfg.channel_membrane,
-                    channel_segmentation=input_cfg.channel_segmentation,
-                    pixel_size_um_fallback=input_cfg.pixel_size_um,
-                    z_policy=input_cfg.z_policy,
-                    substack_range=input_cfg.substack_range,
-                    fov_id_prefix="FOV",
-                )
-
-        return _nd2_gen()
-    else:
-        raise ValueError(f"Unexpected input.mode: {input_cfg.mode!r}")
+    """Return an iterable of FOV objects. Delegates to io/ingest.build_fov_iterator."""
+    from quantipy_polarity.io.ingest import build_fov_iterator
+    return build_fov_iterator(cfg)
