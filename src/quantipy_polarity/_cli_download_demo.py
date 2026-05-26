@@ -83,7 +83,33 @@ def _download_and_extract(url: str, output_dir: Path) -> None:
                         bar.update(len(chunk))
 
         with zipfile.ZipFile(tmp_path) as zf:
-            zf.extractall(output_dir)
+            # Strip a leading top-level directory (e.g. "demo/") from every
+            # entry in the zip so that the contents land directly in
+            # output_dir rather than output_dir/demo/.  This fixes the
+            # double-nesting that occurs when the release zip was created with
+            # a top-level "demo/" wrapper (BLOCKER B2).
+            names = zf.namelist()
+            # Find the common leading path component shared by all entries.
+            parts0 = names[0].split("/") if names else []
+            strip_prefix: str | None = None
+            if len(parts0) >= 2:
+                candidate = parts0[0] + "/"
+                if all(n.startswith(candidate) for n in names):
+                    strip_prefix = candidate
+
+            for member in zf.infolist():
+                arc_name = member.filename
+                if strip_prefix and arc_name.startswith(strip_prefix):
+                    arc_name = arc_name[len(strip_prefix):]
+                if not arc_name:  # was the top-level dir entry itself
+                    continue
+                target = output_dir / arc_name
+                if member.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(member) as src, open(target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
 
         # Verify SHA-256 via bundled SHA256SUMS.txt (if present)
         sums_path = output_dir / "SHA256SUMS.txt"
