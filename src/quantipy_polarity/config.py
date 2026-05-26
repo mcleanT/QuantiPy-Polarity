@@ -51,6 +51,8 @@ class InputTIF(_InputCommon):
     channel_membrane: int = Field(ge=0)
     channel_segmentation: int = Field(ge=0)
     pixel_size_um: float = Field(gt=0)
+    tif_scheme: Literal["stack", "multifile"] = "stack"
+    channel_suffix_template: str = "_ch{ch}"
 
 
 class InputMasks(_InputCommon):
