@@ -14,15 +14,7 @@ from quantipy_polarity.cli import main
 
 
 _STUBS: dict[str, tuple[str, str]] = {
-    # name: (short_help, phase_pointer)
-    "debug": (
-        "Open the read-only per-cell viewer",
-        "Phase 7 (interactive viewer)",
-    ),
-    "analyze": (
-        "[Advanced] Run a curated experimental analysis by name",
-        "Phase 7 (experimental analyses)",
-    ),
+    # All Phase 7 stubs have been replaced by real implementations.
 }
 
 
