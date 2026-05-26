@@ -20,7 +20,6 @@ from pathlib import Path
 import click
 
 from quantipy_polarity.cli import main
-from quantipy_polarity.validation import run_validation
 
 
 _DEFAULT_OUTPUT = Path.home() / ".cache" / "quantipy" / "validation"
@@ -72,6 +71,13 @@ def _find_validation_data_dir() -> Path:
 )
 def validate_cmd(output: Path | None, tolerance: float) -> None:
     """Regenerate QP-vs-Python comparison figure from bundled synthetic data."""
+    try:
+        from quantipy_polarity.validation.qp_vs_python import run_validation
+    except ImportError:
+        raise click.ClickException(
+            "validate requires matplotlib — install with: pip install -e .[pipeline]"
+        )
+
     output_dir = output or _DEFAULT_OUTPUT
     data_dir = _find_validation_data_dir()
     qp_path = data_dir / "qp_results.parquet"
