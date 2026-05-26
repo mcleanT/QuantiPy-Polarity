@@ -83,3 +83,20 @@ compatible with `quantipy polarity` (Phase 2 masks-mode contract).
 All operations use `(y, x)` pixel coordinates (numpy/scikit-image convention).
 Angles are in degrees: `[0, 180)` for axial polarity. See the contract table
 in `src/quantipy_polarity/contracts.py` for the full schema.
+
+## Migration front
+
+`quantipy front` detects the spatial boundary between the dense cell mass and the
+open region (wound space or leading edge). It computes:
+
+- `dist_to_front_um`: Euclidean distance from each cell centroid to the nearest
+  front pixel, in microns.
+- `mig_dir_deg`: direction from the cell toward the front, in degrees [0, 360).
+- `mig_alignment`: magnitude-weighted alignment score in [-1, +1].
+  Positive = cells on average point *toward* the front (biologically expected for
+  polarised collective migration). Zero = random alignment. Negative = cells point
+  away from front.
+
+**Validity requirement:** a definable front must exist. Random-walk, rotational,
+or non-migrating tissue should skip migration analysis (`migration.detect_front: false`).
+See `docs/migration-front.md` for the algorithm and tuning guide.
