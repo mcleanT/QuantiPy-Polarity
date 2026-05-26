@@ -13,6 +13,7 @@ import base64
 import io
 import os
 import tempfile
+import time as _time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -186,6 +187,9 @@ def build_report(
     template_data = gather_report_inputs(results_dir)
     if cfg is not None and cfg.project.name:
         template_data["project_name"] = cfg.project.name
+
+    template_data["now"] = _time.strftime("%Y-%m-%d %H:%M UTC", _time.gmtime())
+    template_data["thumbnail_max_px"] = _THUMBNAIL_MAX_PX
 
     html_content = template.render(**template_data)
 
