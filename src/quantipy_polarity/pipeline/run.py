@@ -178,8 +178,11 @@ def _stage_aggregate(cfg: Config, out_dir: Path) -> None:
 
 def _stage_front(cfg: Config, out_dir: Path) -> None:
     """Front: label masks → front_um_per_fov.parquet + per_cell migration cols."""
-    if cfg.migration.front_method == "none":
-        log.info("stage_front_skipped_method_none")
+    if cfg.migration.front_method == "none" or not cfg.migration.detect_front:
+        log.info(
+            "stage_front_skipped",
+            reason="method_none" if cfg.migration.front_method == "none" else "detect_front_false",
+        )
         return
 
     import numpy as np

@@ -273,3 +273,55 @@ def test_run_pipeline_writes_config_snapshot(tmp_path: Path) -> None:
 
     snapshot = out_dir / "config.snapshot.yaml"
     assert snapshot.exists(), "config.snapshot.yaml not written"
+
+
+# ---------------------------------------------------------------------------
+# Test 9 (H4 regression): detect_front=False skips front stage
+# ---------------------------------------------------------------------------
+
+
+def test_stage_front_skipped_when_detect_front_false(tmp_path: Path) -> None:
+    """HIGH H4 regression: cfg.migration.detect_front=False must skip the front
+    stage regardless of front_method value."""
+    mem_dir = tmp_path / "membrane"
+    msk_dir = tmp_path / "masks"
+    mem_dir.mkdir(parents=True, exist_ok=True)
+    msk_dir.mkdir(parents=True, exist_ok=True)
+    cfg = Config.model_validate(
+        {
+            "input": {
+                "mode": "masks",
+                "path": str(mem_dir),
+                "masks_dir": str(msk_dir),
+                "pixel_size_um": 0.65,
+            },
+            "migration": {
+                "detect_front": False,
+                "front_method": "v3_outward",  # non-"none" — previously would NOT skip
+            },
+        }
+    )
+    out_dir = tmp_path / "out"
+
+    with (
+        patch("quantipy_polarity.pipeline.run._stage_ingest"),
+        patch("quantipy_polarity.pipeline.run._stage_segment"),
+        patch("quantipy_polarity.pipeline.run._stage_polarity"),
+        patch("quantipy_polarity.pipeline.run._stage_aggregate"),
+        patch("quantipy_polarity.pipeline.run._stage_plot"),
+        patch("quantipy_polarity.pipeline.run._stage_report"),
+    ):
+        # _stage_front is NOT patched — it runs real logic up to the early return
+        run_pipeline(cfg, out_dir, stages=["front"])
+
+    # Front stage must complete (status=done) without producing any parquet output
+    status_path = out_dir / "stage_status" / "front.json"
+    assert status_path.exists(), "front.json status not written"
+    state = json.loads(status_path.read_text())
+    assert state["status"] == "done", f"Expected status=done, got {state['status']}"
+
+    # No migration parquet should be emitted
+    front_parquet = out_dir / "04_migration" / "front_um_per_fov.parquet"
+    assert not front_parquet.exists(), (
+        "front_um_per_fov.parquet was written even though detect_front=False"
+    )
