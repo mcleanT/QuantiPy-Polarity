@@ -149,3 +149,59 @@ if __name__ == "__main__":
     out.parent.mkdir(parents=True, exist_ok=True)
     save_synthetic_fov(out)
     print(f"Wrote {out}")
+
+
+import tifffile as _tifffile
+
+
+def write_synthetic_tif_stack(
+    out_dir: Path,
+    fov_id: str = "FOV_01",
+    *,
+    n_cells: int = 20,
+    image_size: int = 128,
+    seed: int = 20260526,
+) -> dict:
+    """Write a 2-channel multi-page TIF (C, H, W) to out_dir/<fov_id>.tif.
+
+    Channel 0 = membrane signal (float32 scaled to uint16).
+    Channel 1 = nuclear placeholder (uniform random uint16).
+    Returns the build dict from build_synthetic_fov (includes theta_truth).
+    """
+    import numpy as _np
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    data = build_synthetic_fov(n_cells=n_cells, image_size=image_size, seed=seed)
+    membrane_u16 = (data["membrane"] * 65535).clip(0, 65535).astype(_np.uint16)
+    rng = _np.random.default_rng(seed + 1)
+    nuclear_u16 = rng.integers(0, 1000, size=(image_size, image_size), dtype=_np.uint16)
+    stack = _np.stack([membrane_u16, nuclear_u16], axis=0)  # (C=2, H, W)
+    _tifffile.imwrite(out_dir / f"{fov_id}.tif", stack, photometric="minisblack")
+    return data
+
+
+def write_synthetic_tif_multifile(
+    out_dir: Path,
+    fov_id: str = "FOV_01",
+    *,
+    n_cells: int = 20,
+    image_size: int = 128,
+    seed: int = 20260526,
+) -> dict:
+    """Write per-channel TIFs to out_dir/<fov_id>_ch0.tif and <fov_id>_ch1.tif.
+
+    Channel 0 = membrane, Channel 1 = nuclear placeholder.
+    Returns the same build dict.
+    """
+    import numpy as _np
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    data = build_synthetic_fov(n_cells=n_cells, image_size=image_size, seed=seed)
+    membrane_u16 = (data["membrane"] * 65535).clip(0, 65535).astype(_np.uint16)
+    rng = _np.random.default_rng(seed + 1)
+    nuclear_u16 = rng.integers(0, 1000, size=(image_size, image_size), dtype=_np.uint16)
+    _tifffile.imwrite(out_dir / f"{fov_id}_ch0.tif", membrane_u16)
+    _tifffile.imwrite(out_dir / f"{fov_id}_ch1.tif", nuclear_u16)
+    return data
