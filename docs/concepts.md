@@ -100,3 +100,20 @@ open region (wound space or leading edge). It computes:
 **Validity requirement:** a definable front must exist. Random-walk, rotational,
 or non-migrating tissue should skip migration analysis (`migration.detect_front: false`).
 See `docs/migration-front.md` for the algorithm and tuning guide.
+
+## Ingest stage (Phase 5)
+
+The `ingest` stage is the first step of `quantipy run` and is also available as
+`quantipy ingest --config config.yaml --output ./results`.
+
+It converts raw microscopy input (`.nd2` or multi-page / multifile `.tif`) into
+normalised per-FOV membrane TIFs at `01_ingest/<fov_id>_membrane.tif`.
+Normalisation converts the selected membrane channel to float32 [0, 1].
+
+**Masks mode skips this stage automatically.** When `mode: masks`, QuantiPy
+reads pre-segmented label masks directly from `input.masks_dir`; the `01_ingest/`
+directory is not created and `stage_status/ingest.json` is written with
+`status: skipped`.
+
+See `docs/pipeline.md` for the full seven-stage orchestration architecture,
+resume semantics, and run directory layout.
