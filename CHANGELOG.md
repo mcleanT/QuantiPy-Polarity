@@ -7,6 +7,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.1] — 2026-05-26
+
+Patch release fixing all issues identified in the post-release code review (B1–B4, H1–H5, M1–M3, L1/L3).
+
+### Fixed (BLOCKER)
+
+- **B1** — `boundary_pca.py`: division-by-zero when a cell has fewer than 2 boundary pixels; now returns `NaN` polarity vector instead of crashing.
+- **B2** — `_cli_run.py` / `pipeline/runner.py`: `--resume` flag re-ran completed stages; stage-status check now correctly skips stages marked `done` in `_stage_status.json`.
+- **B3** — `io/tif.py`: multi-channel TIFs were loaded with channels-last axis order but downstream code expected channels-first; axis transposition corrected.
+- **B4** — `validation/qp_vs_python.py`: R² metric was computed on un-sorted arrays, producing incorrect slope/intercept; arrays now sorted by x before regression.
+
+### Fixed (HIGH)
+
+- **H1** — `segment/postprocess.py`: small-cell filter used pixel area without converting to µm²; threshold now applied in physical units using pixel-size metadata.
+- **H2** — `migration/front.py`: front-detection failed silently when fewer than 3 cells were present in a FOV; now raises a descriptive `ValueError`.
+- **H3** — `polarity/per_cell.py`: `condition` column was dropped when merging metadata; join key corrected to preserve all metadata columns.
+- **H4** — `report/builder.py`: base64 figure inlining used `'rb'` mode but Jinja2 expected a `str`; decode step added.
+- **H5** — `experimental/analyses/magnitude_vs_distance.py`: robust regression called `scipy.stats.theilslopes` with positional `y, x` order (swapped); arguments corrected.
+
+### Fixed (MEDIUM)
+
+- **M1** — `config.py`: `masks` mode did not validate that `mask_dir` exists at config-load time; `@model_validator` added for path existence check.
+- **M2** — `viz/polarity_map.py`: quiver arrows were plotted in pixel coordinates but axis was in µm; coordinate scaling applied before plotting.
+- **M3** — `cli.py`: `quantipy analyze` subcommand group was missing from `--help` output because it was not registered on the top-level group; registration added.
+
+### Fixed (LOW)
+
+- **L1** — `_version.py` / `__init__.py`: `__version__` was not re-exported from the package `__init__`; `from ._version import __version__` added.
+- **L3** — `pyproject.toml`: `jinja2` was listed under `[pipeline]` extras but is also required by `quantipy report` in base installs; moved to core `dependencies`.
+
+---
+
 ## [0.1.0] — 2026-05-26
 
 First public release of QuantiPy Polarity.
