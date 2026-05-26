@@ -39,17 +39,9 @@ _STUBS: dict[str, tuple[str, str]] = {
         "[Advanced] Cellpose-SAM → label masks",
         "Phase 3 (segmentation)",
     ),
-    "polarity": (
-        "[Advanced] Label masks + membrane → per-cell axes",
-        "Phase 2 (boundary-PCA)",
-    ),
     "front": (
         "[Advanced] Migration-front detection (auto only in v0.1.0)",
         "Phase 4 (migration front)",
-    ),
-    "aggregate": (
-        "[Advanced] Per-FOV parquets → experiment parquet",
-        "Phase 2 (aggregation)",
     ),
     "plot": (
         "[Advanced] Regenerate plots from aggregated parquet",
