@@ -63,9 +63,10 @@ results/
 config.local.yaml
 *.local.yaml
 
-# Demo data caches
-demo/
+# Demo data caches (downloaded/generated locally — ignored)
+# Exception: the committed synthetic demo bundle under demo/ is tracked
 demo_*/
+# demo/ itself is committed (synthetic TIFs + masks + config)
 
 # Logs
 *.log

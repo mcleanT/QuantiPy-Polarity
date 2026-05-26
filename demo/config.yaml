@@ -1,0 +1,14 @@
+input:
+  mode: masks
+  path: demo
+  masks_dir: demo
+  pixel_size_um: 0.1625
+  channel_membrane: 0
+segment:
+  diameter_px: 28
+polarity:
+  method: boundary_pca
+migration:
+  detect_front: false
+viz:
+  rose_bins: 24
