@@ -22,6 +22,7 @@ from quantipy_polarity.validation.synthetic_data import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def paired_parquets(tmp_path):
     """Legacy two-file fixture using synthetic data."""
@@ -38,7 +39,9 @@ def combined_parquet(tmp_path):
     combined["py_magnitude"] = py_df["py_magnitude"].values
     combined["py_axis_deg"] = py_df["py_axis_deg"].values
     # Rename to match real-data column names
-    combined = combined.rename(columns={"qp_axis_deg": "qp_angle_deg", "py_axis_deg": "py_angle_deg"})
+    combined = combined.rename(
+        columns={"qp_axis_deg": "qp_angle_deg", "py_axis_deg": "py_angle_deg"}
+    )
     path = tmp_path / "qp_vs_python_real.parquet"
     combined.to_parquet(path, index=False)
     return path
@@ -47,6 +50,7 @@ def combined_parquet(tmp_path):
 # ---------------------------------------------------------------------------
 # Unit tests — _r2 helper
 # ---------------------------------------------------------------------------
+
 
 def test_r2_perfect():
     x = np.array([0.1, 0.5, 0.9])
@@ -58,6 +62,7 @@ def test_r2_perfect():
 # ---------------------------------------------------------------------------
 # Unit tests — _match_cells (legacy path, used by synthetic tests)
 # ---------------------------------------------------------------------------
+
 
 def test_match_cells_all_matched():
     qp_df, py_df = generate_validation_parquets()
@@ -79,6 +84,7 @@ def test_match_cells_tight_tolerance_excludes():
 # ---------------------------------------------------------------------------
 # Combined-parquet API (new primary path)
 # ---------------------------------------------------------------------------
+
 
 def test_run_validation_combined_outputs(combined_parquet, tmp_path):
     out = tmp_path / "val_out"
@@ -105,6 +111,7 @@ def test_run_validation_combined_r2(combined_parquet, tmp_path):
 # ---------------------------------------------------------------------------
 # Legacy two-file API (backward compat)
 # ---------------------------------------------------------------------------
+
 
 def test_run_validation_outputs(paired_parquets, tmp_path):
     qp_path, py_path = paired_parquets

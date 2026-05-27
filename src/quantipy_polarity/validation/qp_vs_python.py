@@ -67,8 +67,8 @@ class ValidationResult:
     slope_angle: float
     intercept_angle: float
     n_matched: int
-    n_unmatched_qp: int = 0   # always 0 for combined-format inputs
-    n_unmatched_py: int = 0   # always 0 for combined-format inputs
+    n_unmatched_qp: int = 0  # always 0 for combined-format inputs
+    n_unmatched_py: int = 0  # always 0 for combined-format inputs
 
 
 def _r2(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
@@ -175,6 +175,7 @@ def make_figure(
 # Legacy KDTree-matching path (two-file format)
 # ---------------------------------------------------------------------------
 
+
 def _match_cells(
     qp_df: pd.DataFrame,
     py_df: pd.DataFrame,
@@ -226,6 +227,7 @@ def _match_cells(
 # Primary API
 # ---------------------------------------------------------------------------
 
+
 def run_validation(
     combined_path: Path | str,
     output_dir_or_py_path: Path | str,
@@ -259,7 +261,9 @@ def run_validation(
         real_output_dir.mkdir(parents=True, exist_ok=True)
 
         df = pd.read_parquet(combined_path)
-        df = df.dropna(subset=["qp_magnitude", "py_magnitude", "qp_angle_deg", "py_angle_deg"])
+        df = df.dropna(
+            subset=["qp_magnitude", "py_magnitude", "qp_angle_deg", "py_angle_deg"]
+        )
 
         if len(df) < 10:
             raise ValueError(
@@ -296,7 +300,7 @@ def run_validation(
         real_output_dir = Path(output_dir)
         real_output_dir.mkdir(parents=True, exist_ok=True)
 
-        qp_df = pd.read_parquet(combined_path)   # here combined_path is actually qp_path
+        qp_df = pd.read_parquet(combined_path)  # here combined_path is actually qp_path
         py_df = pd.read_parquet(py_path)
 
         n_qp_total = len(qp_df)
