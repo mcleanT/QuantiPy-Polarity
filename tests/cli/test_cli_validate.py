@@ -1,6 +1,5 @@
 """CLI tests for `quantipy validate`."""
 
-import pandas as pd
 import pytest
 from click.testing import CliRunner
 
