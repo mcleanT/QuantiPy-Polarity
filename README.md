@@ -12,14 +12,16 @@ QuantiPy Polarity measures planar cell polarity on a cell-by-cell basis using a 
 
 ## Validation
 
-QuantiPy reproduces QuantifyPolarity's per-cell polarity calls. The figure below shows the linear regression between QP (the canonical Mathematica tool) and our Python implementation on a matched 100-cell synthetic dataset:
+QuantiPy outputs are linearly related to QuantifyPolarity's per-cell polarity calls. The figure below shows the regression between QP (the canonical Mathematica tool) and our Python implementation on >94,000 real cells from a 25 h migration experiment (clones C10 + D11, 28 FOVs):
 
 ![QP vs Python validation](docs/figures/validation_qp_vs_python.png)
 
 | Metric | R² | Slope | Intercept |
 |---|---|---|---|
-| Magnitude | 0.987 | 0.979 | 0.014 |
-| Axis angle | 0.998 | 1.002 | −0.093 |
+| Magnitude | 0.816 | 0.668 | 0.003 |
+| Axis angle | 0.468 | 0.692 | 1.170 |
+
+**Note on magnitude slope:** QP consistently reports ~50% larger magnitudes than the Python implementation due to a normalization difference in the boundary-PCA algorithm. The linear relationship is preserved (slope 0.67, R²=0.82); magnitude values from the two tools should not be compared directly without applying this scaling. The angle correlation is weaker (R²=0.47), reflecting genuine differences in how each tool handles cells near the polarity axis boundary.
 
 Reproduce locally:
 
@@ -47,7 +49,7 @@ The `[pipeline]` extra adds `nd2reader`, `cellpose`, `matplotlib`, and `tqdm` fo
 - `quantipy run` — single-shot: raw input → all outputs (polarity, front, figures, report)
 - `quantipy init-config` — scaffold a config YAML for `nd2`, `tif`, or `masks` input mode
 - `quantipy download-demo` — pull the demo bundle (~5 MB synthetic cells) from GitHub Releases
-- `quantipy validate` — regenerate the QP-vs-Python comparison figure from bundled synthetic data
+- `quantipy validate` — regenerate the QP-vs-Python comparison figure from the bundled real 94k-cell dataset
 - `quantipy debug` — write a self-contained per-cell HTML viewer for a completed run
 
 **Advanced commands — per-stage control**
