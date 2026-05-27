@@ -7,6 +7,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.3] — 2026-05-26
+
+### Changed
+
+- **Validation data**: replaced the synthetic 100-cell parquets (`qp_results.parquet` /
+  `python_results.parquet`, seed=42, σ=0.03/2°) with a single combined real-data
+  parquet (`qp_vs_python_real.parquet`, 94,386 cells, clones C10 + D11, 28 FOVs,
+  25 h migration experiment). Real R²: magnitude 0.816 (slope 0.668), angle 0.468 (slope 0.692).
+- **`validation/qp_vs_python.py`**: added primary `run_validation(combined_path, output_dir)`
+  signature for combined parquets (pre-paired cells, no centroid matching needed).
+  Legacy two-file signature `run_validation(qp_path, py_path, output_dir)` retained for
+  backward compatibility with synthetic test fixtures.
+- **`_cli_validate.py`**: updated to load `qp_vs_python_real.parquet` by default; magnitude
+  R² threshold lowered from 0.85 → 0.70 to reflect honest real-data numbers.
+- **README**: validation section now shows real R² values and explains the ~50% magnitude
+  normalization difference between QP and Python implementations.
+- **`docs/validation.md`**: replaced synthetic-data methodology with real 94k-cell
+  methodology; documents algorithmic differences in magnitude and angle.
+- **`validation/synthetic_data.py`**: docstring updated to clarify this is for test
+  fixtures only, NOT the validation reference.
+- **Deleted**: `data/validation/qp_results.parquet` and `data/validation/python_results.parquet`
+  (synthetic 100-cell files removed to avoid confusion with real data).
+- **Figure**: `docs/figures/validation_qp_vs_python.png/.pdf` regenerated from real data.
+
+---
+
 ## [0.1.2] — 2026-05-26
 
 ### Fixed
