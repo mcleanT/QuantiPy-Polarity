@@ -1,7 +1,14 @@
-"""Deterministic synthetic validation data generator.
+"""Deterministic synthetic data generator — FOR TESTS ONLY.
 
-Used to (a) create the committed data/validation/ parquets at repo init time,
-(b) regenerate them in CI for structural identity checks.
+.. warning::
+    This module generates *synthetic* (fake) polarity data. It is used
+    exclusively by the test suite as a lightweight in-memory fixture. It is
+    **NOT** the validation reference for QuantiPy Polarity.
+
+    The canonical validation is the real 94,386-cell paired parquet at
+    ``src/quantipy_polarity/data/validation/qp_vs_python_real.parquet``,
+    which is used by ``quantipy validate`` and documented in
+    ``docs/validation.md``.
 
 Call `generate_validation_parquets(seed=42)` to get (qp_df, py_df).
 Call `write_validation_parquets(out_dir, seed=42)` to write parquets.

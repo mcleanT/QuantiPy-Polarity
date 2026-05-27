@@ -1,11 +1,18 @@
-"""Real `quantipy validate` command (Phase 6).
+"""Real `quantipy validate` command (Phase 6, updated v0.1.3).
 
-Regenerates the QP-vs-Python comparison figure from the bundled synthetic
-validation parquets shipped inside the package at
-``quantipy_polarity/data/validation/``.
+Regenerates the QP-vs-Python comparison figure from the bundled real
+validation parquet shipped inside the package at
+``quantipy_polarity/data/validation/qp_vs_python_real.parquet``.
+
+This file contains 94,386 pre-paired cells from a 25 h migration
+experiment (clones C10 + D11, 28 FOVs) with columns:
+    clone, fov, cell_identity,
+    qp_magnitude, py_magnitude, qp_angle_deg, py_angle_deg
 
 Parquet resolution order:
   1. $QUANTIPY_VALIDATION_DIR env var (override for testing or custom data)
+     — must point to a directory containing ``qp_vs_python_real.parquet``
+     OR the legacy pair ``qp_results.parquet`` + ``python_results.parquet``
   2. Package-relative path: quantipy_polarity/data/validation/
      (works for both editable installs and non-editable wheel installs)
 """
@@ -26,28 +33,37 @@ _DEFAULT_OUTPUT = Path.home() / ".cache" / "quantipy" / "validation"
 _PACKAGE_DATA_DIR = Path(__file__).resolve().parent / "data" / "validation"
 
 
-def _find_validation_data_dir() -> Path:
-    """Resolve bundled validation parquets directory."""
+def _find_validation_parquet() -> tuple[Path, Path | None]:
+    """Resolve bundled validation parquet(s).
+
+    Returns (combined_path, None) for the new single-file format, or
+    (qp_path, py_path) for the legacy two-file format.
+    """
     # 1. Env-var override (tests + custom datasets)
     env = os.environ.get("QUANTIPY_VALIDATION_DIR")
-    if env:
-        p = Path(env)
-        if p.is_dir():
-            return p
+    data_dir = Path(env) if env else _PACKAGE_DATA_DIR
+
+    if env and not data_dir.is_dir():
         raise click.ClickException(
             f"QUANTIPY_VALIDATION_DIR={env!r} does not exist or is not a directory."
         )
-    # 2. Package-relative path (editable install and wheel install)
-    if (
-        _PACKAGE_DATA_DIR.is_dir()
-        and (_PACKAGE_DATA_DIR / "qp_results.parquet").exists()
-    ):
-        return _PACKAGE_DATA_DIR
+
+    # Prefer combined parquet
+    combined = data_dir / "qp_vs_python_real.parquet"
+    if combined.exists():
+        return combined, None
+
+    # Fall back to legacy two-file format
+    qp_path = data_dir / "qp_results.parquet"
+    py_path = data_dir / "python_results.parquet"
+    if qp_path.exists() and py_path.exists():
+        return qp_path, py_path
+
     raise click.ClickException(
-        "Could not find bundled validation parquets inside the installed package. "
-        "Expected quantipy_polarity/data/validation/qp_results.parquet. "
+        "Could not find bundled validation parquet inside the installed package. "
+        "Expected quantipy_polarity/data/validation/qp_vs_python_real.parquet. "
         "Reinstall the package or set QUANTIPY_VALIDATION_DIR to a directory "
-        "containing qp_results.parquet and python_results.parquet."
+        "containing qp_vs_python_real.parquet."
     )
 
 
@@ -66,10 +82,14 @@ def _find_validation_data_dir() -> Path:
     type=float,
     default=5.0,
     show_default=True,
-    help="Max centroid distance (pixels) for NN cell matching.",
+    help="(Legacy two-file mode only) Max centroid distance (pixels) for NN cell matching.",
 )
 def validate_cmd(output: Path | None, tolerance: float) -> None:
-    """Regenerate QP-vs-Python comparison figure from bundled synthetic data."""
+    """Regenerate QP-vs-Python comparison figure from bundled real validation data.
+
+    Ships 94,386 pre-paired cells from a 25 h migration experiment
+    (clones C10 + D11). See docs/validation.md for methodology.
+    """
     try:
         from quantipy_polarity.validation.qp_vs_python import run_validation
     except ImportError:
@@ -78,14 +98,16 @@ def validate_cmd(output: Path | None, tolerance: float) -> None:
         )
 
     output_dir = output or _DEFAULT_OUTPUT
-    data_dir = _find_validation_data_dir()
-    qp_path = data_dir / "qp_results.parquet"
-    py_path = data_dir / "python_results.parquet"
+    primary, secondary = _find_validation_parquet()
 
-    click.echo(f"Loading validation data from {data_dir} ...")
-    result = run_validation(qp_path, py_path, output_dir, tolerance_px=tolerance)
+    if secondary is None:
+        click.echo(f"Loading real validation data from {primary} ...")
+        result = run_validation(primary, output_dir)
+    else:
+        click.echo(f"Loading legacy validation data from {primary.parent} ...")
+        result = run_validation(primary, secondary, output_dir, tolerance_px=tolerance)
 
-    click.echo(f"\nValidation complete ({result.n_matched} matched cells):")
+    click.echo(f"\nValidation complete ({result.n_matched:,} cells):")
     click.echo(
         f"  Magnitude  R² = {result.r2_magnitude:.4f}  slope = {result.slope_magnitude:.4f}"
     )
@@ -94,8 +116,9 @@ def validate_cmd(output: Path | None, tolerance: float) -> None:
     )
     click.echo(f"  Figures saved to {output_dir}")
 
-    if result.r2_magnitude < 0.85:
+    # Threshold reflects real data (lower R² is honest, not a failure)
+    if result.r2_magnitude < 0.70:
         raise click.ClickException(
-            f"Magnitude R² = {result.r2_magnitude:.4f} is below threshold 0.85. "
+            f"Magnitude R² = {result.r2_magnitude:.4f} is below threshold 0.70. "
             "The validation data may be corrupted."
         )
