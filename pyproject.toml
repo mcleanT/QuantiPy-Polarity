@@ -1,6 +1,6 @@
 [project]
 name = "quantipy-polarity"
-version = "0.1.3"
+version = "0.1.4"
 description = "Single-shot planar polarity quantification from raw microscopy images"
 readme = "README.md"
 authors = [{name = "mst36", email = "taggartmc@pennmedicine.upenn.edu"}]

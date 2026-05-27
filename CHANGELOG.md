@@ -7,6 +7,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.4] — 2026-05-26
+
+### Changed
+
+- **Validation**: replace naive Pearson R² on raw axis angles with proper axial
+  metrics (median axial Δθ, mean cos(2Δθ), Stokes-space R²). The naive metric was
+  confounded by axial wraparound at ±90° and by ~78% of cells having near-zero
+  polarity magnitude. Real angle agreement on well-polarised cells
+  (n=20,784, magnitude > 0.05) is median Δθ = 4.5°, cos(2Δθ) = 0.965,
+  Stokes R² = 0.939 / 0.921. `ValidationResult` dataclass updated: removed
+  `r2_angle`, `slope_angle`, `intercept_angle`; added `n_angle_filtered`,
+  `median_axial_delta_deg`, `mean_cos_2delta`, `stokes_r2_s1`, `stokes_r2_s2`.
+  New public helpers exported: `axial_angle_diff_deg`, `stokes`, `MAGNITUDE_THRESHOLD`.
+- **`_cli_validate.py`**: updated output to print new metrics
+  ("Angle: median Δθ=4.5° (mag>0.05 cells), cos(2Δθ)=0.965, Stokes R²=0.939/0.921").
+  Added angle acceptance criterion: pass if `mean_cos_2delta > 0.85` OR
+  `median_axial_delta_deg < 10°`.
+- **README**: validation table replaced with corrected axial metrics; explicit note
+  that naive Pearson on raw angles is the wrong metric for axial data.
+- **`docs/validation.md`**: expanded with axial methodology section — why axial
+  (mod 180°), why magnitude-filter, cos(2Δθ) alignment metric, Stokes-space R²,
+  and reference to Mardia & Jupp "Directional Statistics".
+- **Validation figure**: Panel B changed from axis angle scatter to axial Δθ
+  histogram with all-cells and magnitude-filtered overlays, median annotated.
+
+---
+
 ## [0.1.3] — 2026-05-26
 
 ### Changed

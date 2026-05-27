@@ -16,12 +16,18 @@ QuantiPy outputs are linearly related to QuantifyPolarity's per-cell polarity ca
 
 ![QP vs Python validation](docs/figures/validation_qp_vs_python.png)
 
-| Metric | R² | Slope | Intercept |
-|---|---|---|---|
-| Magnitude | 0.816 | 0.668 | 0.003 |
-| Axis angle | 0.468 | 0.692 | 1.170 |
+| Component | Metric | Value |
+|---|---|---|
+| Polarity magnitude | R² | **0.816** |
+| Polarity magnitude | Slope (QP→Python) | 0.668* |
+| Polarity axis | Median axial Δθ | **4.5°** |
+| Polarity axis | Mean cos(2Δθ) | **0.965** |
+| Polarity axis | Stokes R² (S₁/S₂) | **0.939 / 0.921** |
 
-**Note on magnitude slope:** QP consistently reports ~50% larger magnitudes than the Python implementation due to a normalization difference in the boundary-PCA algorithm. The linear relationship is preserved (slope 0.67, R²=0.82); magnitude values from the two tools should not be compared directly without applying this scaling. The angle correlation is weaker (R²=0.47), reflecting genuine differences in how each tool handles cells near the polarity axis boundary.
+\*QP and Python use slightly different magnitude normalizations; the linear relationship is preserved.
+Axis metrics computed on n=20,784 cells with qp_magnitude > 0.05 AND py_magnitude > 0.05 (well-polarised cells). **Naive Pearson R² on raw angles is the wrong metric for axial data** — polarity axes are defined mod 180°, so cells straddling the ±90° boundary appear ~180° apart in raw angle space but are only 2° apart physically. The correct approach is to compute axial Δθ (wrapping at 90°) and use the Stokes representation cos(2θ)/sin(2θ). Additionally, ~78% of cells have near-zero polarity magnitude and therefore meaningless axis angles; magnitude filtering is required before evaluating axis agreement.
+
+**Note on magnitude slope:** QP consistently reports ~50% larger magnitudes than the Python implementation due to a normalization difference in the boundary-PCA algorithm. The linear relationship is preserved (slope 0.668, R²=0.816); magnitude values from the two tools should not be compared directly without applying this scaling.
 
 Reproduce locally:
 

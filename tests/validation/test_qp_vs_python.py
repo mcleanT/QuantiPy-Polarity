@@ -6,11 +6,14 @@ import numpy as np
 import pytest
 
 from quantipy_polarity.validation.qp_vs_python import (
+    MAGNITUDE_THRESHOLD,
     ValidationResult,
     _match_cells,
     _r2,
+    axial_angle_diff_deg,
     make_figure,
     run_validation,
+    stokes,
 )
 from quantipy_polarity.validation.synthetic_data import (
     generate_validation_parquets,
@@ -60,6 +63,43 @@ def test_r2_perfect():
 
 
 # ---------------------------------------------------------------------------
+# Unit tests — axial angle helpers
+# ---------------------------------------------------------------------------
+
+
+def test_axial_angle_diff_zero():
+    """Identical angles give 0°."""
+    a = np.array([0.0, 45.0, 89.0, -89.0])
+    diff = axial_angle_diff_deg(a, a)
+    np.testing.assert_allclose(diff, 0.0, atol=1e-10)
+
+
+def test_axial_angle_diff_wraparound():
+    """Angles that straddle ±90° should give a small difference, not ~180°."""
+    # +89° and -89° are 2° apart axially (not 178°)
+    diff = axial_angle_diff_deg(np.array([89.0]), np.array([-89.0]))
+    assert diff[0] < 5.0, f"Expected ~2°, got {diff[0]:.2f}°"
+
+
+def test_axial_angle_diff_range():
+    """Result must be in [0°, 90°]."""
+    rng = np.random.default_rng(42)
+    a = rng.uniform(-90, 90, 1000)
+    b = rng.uniform(-90, 90, 1000)
+    diff = axial_angle_diff_deg(a, b)
+    assert diff.min() >= 0.0
+    assert diff.max() <= 90.0 + 1e-10
+
+
+def test_stokes_orthogonal():
+    """cos(2θ) and sin(2θ) should be on the unit circle."""
+    angles = np.linspace(-90, 90, 50)
+    s1, s2 = stokes(angles)
+    norms = s1**2 + s2**2
+    np.testing.assert_allclose(norms, 1.0, atol=1e-10)
+
+
+# ---------------------------------------------------------------------------
 # Unit tests — _match_cells (legacy path, used by synthetic tests)
 # ---------------------------------------------------------------------------
 
@@ -106,6 +146,37 @@ def test_run_validation_combined_r2(combined_parquet, tmp_path):
     """Synthetic combined data should still have high magnitude R² (no noise path)."""
     result = run_validation(combined_parquet, tmp_path / "val")
     assert result.r2_magnitude > 0.80, f"R² = {result.r2_magnitude:.4f}"
+
+
+def test_run_validation_combined_axial_metrics(combined_parquet, tmp_path):
+    """Axial angle metrics should exist and be in valid ranges for synthetic data."""
+    result = run_validation(combined_parquet, tmp_path / "val")
+    # n_angle_filtered can be 0 if synthetic magnitudes are all below threshold
+    assert result.n_angle_filtered >= 0
+    # If we have filtered cells, check metric ranges
+    if result.n_angle_filtered >= 3:
+        assert 0.0 <= result.median_axial_delta_deg <= 90.0
+        assert -1.0 <= result.mean_cos_2delta <= 1.0
+        assert 0.0 <= result.stokes_r2_s1 <= 1.0
+        assert 0.0 <= result.stokes_r2_s2 <= 1.0
+
+
+def test_run_validation_combined_metrics_json_has_new_fields(combined_parquet, tmp_path):
+    """The metrics JSON must contain the new axial angle fields."""
+    out = tmp_path / "val"
+    run_validation(combined_parquet, out)
+    metrics = json.loads((out / "validation_metrics.json").read_text())
+    assert "r2_magnitude" in metrics
+    assert "n_matched" in metrics
+    assert "n_angle_filtered" in metrics
+    assert "median_axial_delta_deg" in metrics
+    assert "mean_cos_2delta" in metrics
+    assert "stokes_r2_s1" in metrics
+    assert "stokes_r2_s2" in metrics
+    # Old naive angle fields should NOT be present
+    assert "r2_angle" not in metrics
+    assert "slope_angle" not in metrics
+    assert "intercept_angle" not in metrics
 
 
 # ---------------------------------------------------------------------------

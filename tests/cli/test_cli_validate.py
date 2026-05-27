@@ -26,7 +26,9 @@ def test_validate_runs_successfully(val_dir, tmp_path, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(main, ["validate", "--output", str(tmp_path / "out")])
     assert result.exit_code == 0, result.output
+    # New output format: "Magnitude R²=..." and "Angle: median Δθ=..."
     assert "R²" in result.output or "r2" in result.output.lower()
+    assert "median" in result.output.lower() or "Δθ" in result.output
     assert (tmp_path / "out" / "validation_qp_vs_python.pdf").exists()
 
 

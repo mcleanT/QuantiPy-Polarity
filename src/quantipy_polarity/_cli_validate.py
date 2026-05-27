@@ -91,7 +91,10 @@ def validate_cmd(output: Path | None, tolerance: float) -> None:
     (clones C10 + D11). See docs/validation.md for methodology.
     """
     try:
-        from quantipy_polarity.validation.qp_vs_python import run_validation
+        from quantipy_polarity.validation.qp_vs_python import (
+            MAGNITUDE_THRESHOLD as _mag_threshold,
+            run_validation,
+        )
     except ImportError:
         raise click.ClickException(
             "validate requires matplotlib — install with: pip install -e .[pipeline]"
@@ -107,18 +110,33 @@ def validate_cmd(output: Path | None, tolerance: float) -> None:
         click.echo(f"Loading legacy validation data from {primary.parent} ...")
         result = run_validation(primary, secondary, output_dir, tolerance_px=tolerance)
 
-    click.echo(f"\nValidation complete ({result.n_matched:,} cells):")
+    click.echo(f"\nValidation complete ({result.n_matched:,} cells total):")
     click.echo(
-        f"  Magnitude  R² = {result.r2_magnitude:.4f}  slope = {result.slope_magnitude:.4f}"
+        f"  Magnitude  R² = {result.r2_magnitude:.3f}  slope = {result.slope_magnitude:.3f}"
     )
     click.echo(
-        f"  Axis angle R² = {result.r2_angle:.4f}  slope = {result.slope_angle:.4f}"
+        f"  Angle: median Δθ = {result.median_axial_delta_deg:.1f}°"
+        f"  (mag>{_mag_threshold} cells, n={result.n_angle_filtered:,}),"
+        f"  cos(2Δθ) = {result.mean_cos_2delta:.3f},"
+        f"  Stokes R² = {result.stokes_r2_s1:.3f} / {result.stokes_r2_s2:.3f}"
     )
     click.echo(f"  Figures saved to {output_dir}")
 
-    # Threshold reflects real data (lower R² is honest, not a failure)
+    # Acceptance thresholds
     if result.r2_magnitude < 0.70:
         raise click.ClickException(
             f"Magnitude R² = {result.r2_magnitude:.4f} is below threshold 0.70. "
+            "The validation data may be corrupted."
+        )
+
+    _good_angle = (
+        result.mean_cos_2delta > 0.85
+        or result.median_axial_delta_deg < 10.0
+    )
+    if not _good_angle:
+        raise click.ClickException(
+            f"Axis angle agreement is below threshold: "
+            f"cos(2Δθ) = {result.mean_cos_2delta:.3f} (need > 0.85) and "
+            f"median Δθ = {result.median_axial_delta_deg:.1f}° (need < 10°). "
             "The validation data may be corrupted."
         )
