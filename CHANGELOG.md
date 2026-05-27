@@ -7,6 +7,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.2] — 2026-05-26
+
+### Fixed
+- **CI**: install `.[dev,pipeline]` in fast-tier workflow so matplotlib-dependent tests collect cleanly
+- **L3**: jinja2 moved to core dependencies (was in [pipeline] but used by `quantipy debug`)
+
+### Changed
+- **README**: rewritten as a product README (replacing the phased-development tracker), with validation figure embedded and R² metrics shown inline
+
+---
+
 ## [0.1.1] — 2026-05-26
 
 Patch release fixing all issues identified in the post-release code review (B1–B4, H1–H5, M1–M3, L1/L3).
